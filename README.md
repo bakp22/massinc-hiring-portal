@@ -1,4 +1,4 @@
-# MassINC Hiring Portal — WordPress Plugin Boilerplate
+# MassINC Hiring Portal — WordPress Plugin 
 
 A starter architecture for building a hiring application portal that integrates with an existing WordPress site.
 
