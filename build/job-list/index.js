@@ -1,0 +1,1 @@
+!function(){const{registerBlockType:e}=wp.blocks,{createElement:i}=wp.element;e("minc-hiring/job-list",{edit:function(){return i("div",{className:"minc-hiring-job-list-editor"},i("strong",null,"Hiring Job List"),i("p",null,"Open jobs will be displayed here on the public site."))},save:function(){return null}})}();

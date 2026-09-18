@@ -1,0 +1,10 @@
+{
+  "apiVersion": 3,
+  "name": "minc-hiring/job-list",
+  "title": "Hiring Job List",
+  "description": "Display currently open jobs.",
+  "category": "widgets",
+  "textdomain": "minc-hiring",
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

@@ -1,0 +1,16 @@
+{
+  "apiVersion": 3,
+  "name": "minc-hiring/application-form",
+  "title": "Hiring Application Form",
+  "description": "Display an application form for an open job.",
+  "category": "widgets",
+  "attributes": {
+    "jobId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "textdomain": "minc-hiring",
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}
