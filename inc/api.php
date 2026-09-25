@@ -28,5 +28,3 @@ class API {
         return new \WP_REST_Response(['status' => 'not_implemented'], 501);
     }
 }
-
-add_action('rest_api_init', ['MassINC\API', 'register_routes']);
