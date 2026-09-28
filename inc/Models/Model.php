@@ -1,5 +1,5 @@
 <?php
-namespace MassIncHiring\Models;
+namespace MassINC\Models;
 
 defined('ABSPATH') || exit;
 

@@ -23,6 +23,19 @@ require_once MINC_HIRING_PATH . 'inc/admin.php';
 require_once MINC_HIRING_PATH . 'inc/api.php';
 require_once MINC_HIRING_PATH . 'inc/blocks.php';
 
+function minc_hiring_install() {
+    \MassINC\Database::create_tables();
+    minc_hiring_register_roles();
+}
+
+function minc_hiring_deactivate() {
+    // Cleanup if necessary
+}
+
+function minc_hiring_register_api() {
+    add_action('rest_api_init', ['\MassINC\API', 'register_routes']);
+}
+
 register_activation_hook(__FILE__, 'minc_hiring_install');
 register_deactivation_hook(__FILE__, 'minc_hiring_deactivate');
 
