@@ -22,10 +22,18 @@ class API {
             // WordPress runs validate_callback, then sanitize_callback, before our callback.
             // A missing or invalid field returns a 400 automatically.
             'args' => [
-                'applicant_name' => [
+                'first_name' => [
                     'type'              => 'string',
                     'required'          => true,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [self::class, 'normalize_name'],
+                    'validate_callback' => function ($value) {
+                        return is_string($value) && trim($value) !== '';
+                    },
+                ],
+                'last_name' => [
+                    'type'              => 'string',
+                    'required'          => true,
+                    'sanitize_callback' => [self::class, 'normalize_name'],
                     'validate_callback' => function ($value) {
                         return is_string($value) && trim($value) !== '';
                     },
@@ -33,21 +41,40 @@ class API {
                 'applicant_email' => [
                     'type'              => 'string',
                     'required'          => true,
-                    'sanitize_callback' => 'sanitize_email',
+                    'sanitize_callback' => function ($value) {
+                        return strtolower(sanitize_email($value));
+                    },
                     'validate_callback' => function ($value) {
                         return is_string($value) && is_email($value);
                     },
                 ],
-                'position_id' => [
+                'job_id' => [
                     'type'              => 'integer',
                     'required'          => true,
                     'sanitize_callback' => 'absint',
                     'validate_callback' => function ($value) {
-                        return is_numeric($value) && (int) $value > 0;
+                        return ctype_digit((string) $value) && (int) $value > 0;
+                    },
+                ],
+                'phone' => [
+                    'type'              => 'string',
+                    'required'          => false,
+                    'sanitize_callback' => function ($value) {
+                        return preg_replace('/\D/', '', sanitize_text_field($value));
                     },
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Title-cases a name (e.g. "JOHN smith" -> "John Smith"). Capitalizes
+     * after spaces, hyphens, and apostrophes, but can't know about
+     * exceptions like "McDonald" or "O'Brien" without a name dictionary.
+     */
+    public static function normalize_name($value) {
+        $value = sanitize_text_field($value);
+        return ucwords(strtolower($value), " -'");
     }
 
     public static function get_jobs(\WP_REST_Request $request) {
@@ -59,26 +86,33 @@ class API {
     }
 
     public static function submit_application(\WP_REST_Request $request) {
-        $name     = $request->get_param('applicant_name');
-        $email    = $request->get_param('applicant_email');
-        $position = $request->get_param('position_id');
+        $first_name = $request->get_param('first_name');
+        $last_name  = $request->get_param('last_name');
+        $email      = $request->get_param('applicant_email');
+        $phone      = $request->get_param('phone');
+        $job_id     = $request->get_param('job_id');
 
-        $job = Job::get_by_id($position);
+        $job = Job::get_by_id($job_id);
         if (!$job || $job->get('status') !== 'open') {
             return new \WP_Error('massinc_invalid_position', 'This position is not open for applications.', ['status' => 400]);
         }
 
-        // Reuse the candidate record if this email has applied before.
+        // Reuse the candidate record if this email has applied before,
+        // refreshing their name/phone in case it changed since last time.
         $candidate = Candidate::get_by_email($email);
         if ($candidate) {
             $candidate_id = $candidate->get_id();
+            Candidate::update($candidate_id, [
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+                'phone'      => $phone,
+            ]);
         } else {
-            // The candidates table stores first/last name separately; split on the first space.
-            $parts = preg_split('/\s+/', $name, 2);
             $candidate_id = Candidate::create([
-                'first_name' => $parts[0],
-                'last_name'  => $parts[1] ?? '',
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
                 'email'      => $email,
+                'phone'      => $phone,
             ]);
         }
 

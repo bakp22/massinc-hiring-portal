@@ -4,6 +4,14 @@ namespace MassINC\Models;
 defined('ABSPATH') || exit;
 
 class Job extends Model {
+    public function to_array() {
+        $data = $this->data;
+        $data['id'] = (int) $data['id'];
+        $data['salary_min'] = $data['salary_min'] !== null ? (float) $data['salary_min'] : null;
+        $data['salary_max'] = $data['salary_max'] !== null ? (float) $data['salary_max'] : null;
+        return $data;
+    }
+
     /**
      * Query wp_massinc_jobs for all status='open' roles.
      *
