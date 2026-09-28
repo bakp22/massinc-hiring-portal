@@ -17,4 +17,16 @@ abstract class Model {
     public function get_id() {
         return (int) $this->get('id', 0);
     }
+
+    public function __get($key) {
+        return $this->get($key);
+    }
+
+    public function __isset($key) {
+        return isset($this->data[$key]);
+    }
+
+    public function to_array() {
+        return $this->data;
+    }
 }
