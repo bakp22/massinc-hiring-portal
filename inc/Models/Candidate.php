@@ -98,4 +98,40 @@ class Candidate extends Model {
 
         return (int) $wpdb->insert_id;
     }
+
+    /**
+     * Update an existing candidate's name/phone in wp_massinc_candidates.
+     * Email is intentionally not updated here since it's the lookup key
+     * used to find this candidate in the first place.
+     *
+     * @param int $id
+     * @param array $data
+     * @return bool
+     */
+    public static function update($id, $data) {
+        global $wpdb;
+        $id = absint($id);
+        if (!$id) {
+            return false;
+        }
+
+        $table = $wpdb->prefix . 'massinc_candidates';
+
+        $update_data = [
+            'first_name' => sanitize_text_field($data['first_name'] ?? ''),
+            'last_name'  => sanitize_text_field($data['last_name'] ?? ''),
+            'phone'      => sanitize_text_field($data['phone'] ?? ''),
+            'updated_at' => current_time('mysql'),
+        ];
+
+        $result = $wpdb->update(
+            $table,
+            $update_data,
+            ['id' => $id],
+            ['%s', '%s', '%s', '%s'],
+            ['%d']
+        );
+
+        return $result !== false;
+    }
 }
