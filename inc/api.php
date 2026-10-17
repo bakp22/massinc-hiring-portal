@@ -102,6 +102,13 @@ class API {
         $candidate = Candidate::get_by_email($email);
         if ($candidate) {
             $candidate_id = $candidate->get_id();
+
+            // One application per candidate per job. Checked before updating
+            // the candidate so a rejected duplicate doesn't change their info.
+            if (Application::exists_for($job->get_id(), $candidate_id)) {
+                return new \WP_Error('massinc_duplicate_application', 'You have already applied to this position.', ['status' => 409]);
+            }
+
             Candidate::update($candidate_id, [
                 'first_name' => $first_name,
                 'last_name'  => $last_name,

@@ -255,4 +255,24 @@ class Test_Applications_API extends WP_UnitTestCase {
         $this->assertSame('Doe-Smith', $updated_candidate->get('last_name'));
         $this->assertSame('9998887777', $updated_candidate->get('phone'));
     }
+
+    public function test_applying_to_same_job_twice_returns_409() {
+        $job_id = $this->create_open_job(['title' => 'Job One']);
+        $payload = [
+            'first_name'      => 'Jane',
+            'last_name'       => 'Doe',
+            'applicant_email' => 'dupe@example.com',
+            'phone'           => '111-222-3333',
+            'job_id'          => $job_id,
+        ];
+
+        $this->assertSame(201, $this->dispatch_application($payload)->get_status());
+
+        $payload['first_name'] = 'Janet';
+        $response = $this->dispatch_application($payload);
+        $this->assertSame(409, $response->get_status());
+
+        $candidate = Candidate::get_by_email('dupe@example.com');
+        $this->assertSame('Jane', $candidate->get('first_name'), 'A rejected duplicate must not update the candidate.');
+    }
 }
