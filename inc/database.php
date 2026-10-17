@@ -12,9 +12,10 @@ class Database {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
 
-        $jobs_table         = $wpdb->prefix . 'massinc_jobs';
-        $candidates_table   = $wpdb->prefix . 'massinc_candidates';
-        $applications_table = $wpdb->prefix . 'massinc_applications';
+        $jobs_table          = $wpdb->prefix . 'massinc_jobs';
+        $candidates_table    = $wpdb->prefix . 'massinc_candidates';
+        $applications_table  = $wpdb->prefix . 'massinc_applications';
+        $notifications_table = $wpdb->prefix . 'massinc_notifications';
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -64,6 +65,27 @@ class Database {
             KEY candidate_id (candidate_id),
             KEY status (status),
             KEY assigned_to (assigned_to)
+        ) $charset_collate;
+
+        CREATE TABLE $notifications_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            trigger_key varchar(100) NOT NULL DEFAULT '',
+            application_id bigint(20) unsigned DEFAULT NULL,
+            recipient_email varchar(255) NOT NULL DEFAULT '',
+            subject varchar(255) NOT NULL DEFAULT '',
+            payload longtext NOT NULL,
+            status varchar(50) NOT NULL DEFAULT 'pending',
+            attempts int(11) unsigned NOT NULL DEFAULT 0,
+            last_error text DEFAULT NULL,
+            next_retry_at datetime DEFAULT NULL,
+            sent_at datetime DEFAULT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY trigger_key (trigger_key),
+            KEY application_id (application_id),
+            KEY status (status),
+            KEY next_retry_at (next_retry_at)
         ) $charset_collate;";
 
         dbDelta($sql);

@@ -85,6 +85,16 @@ class Application extends Model {
             return false;
         }
 
-        return (int) $wpdb->insert_id;
+        $insert_id = (int) $wpdb->insert_id;
+
+        /**
+         * Fires immediately after a new application record is created.
+         *
+         * @param int   $insert_id   The newly created application ID.
+         * @param array $insert_data The sanitized application data inserted into the database.
+         */
+        do_action('massinc_application_submitted', $insert_id, $insert_data);
+
+        return $insert_id;
     }
 }
