@@ -1,7 +1,7 @@
 (function () {
     var MAX_BYTES = 10 * 1024 * 1024;
     var MAX_LINKS = 5;
-    var ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx'];
+    var ALLOWED_EXTENSIONS = ['pdf', 'docx'];
     var EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function formatSize(bytes) {
@@ -22,7 +22,7 @@
             return (
                 '"' +
                 file.name +
-                '" isn\'t a supported file type. Please upload a PDF, DOC, or DOCX.'
+                '" isn\'t a supported file type. Please upload a PDF or DOCX.'
             );
         }
         if (file.size === 0) {
@@ -287,6 +287,13 @@
             return !firstInvalid;
         }
 
+        // Bring the message into view; the form can be long, and on a
+        // server error the user may be looking at the submit button.
+        function showSummary() {
+            summary.hidden = false;
+            summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         function showServerError(body, status) {
             var params = body && body.data && body.data.params;
             var shown = false;
@@ -294,7 +301,11 @@
                 Object.keys(params).forEach(function (name) {
                     var field = fieldFor(name);
                     if (field) {
-                        setFieldError(field, 'Please check this field.');
+                        var message = params[name];
+                        setFieldError(
+                            field,
+                            typeof message === 'string' && message ? message : 'Please check this field.'
+                        );
                         shown = true;
                     }
                 });
@@ -304,7 +315,7 @@
                     ? (body && body.message) ||
                       'Something went wrong. Please try again.'
                     : 'Please fix the highlighted fields and try again.';
-            summary.hidden = false;
+            showSummary();
         }
 
         form.addEventListener('submit', function (event) {
@@ -314,24 +325,34 @@
                 return;
             }
 
-            // NOTE: files are validated and held above, but not sent yet. They
-            // go in the request once POST /applications accepts multipart
-            // (attachment model + server-side upload work).
-            var payload = {
-                first_name: form.elements.first_name.value.trim(),
-                last_name: form.elements.last_name.value.trim(),
-                applicant_email: emailInput.value.trim(),
-                phone: form.elements.phone.value.trim(),
-                job_id: parseInt(form.elements.job_id.value, 10)
-            };
+            var body = new FormData();
+            body.append('first_name', form.elements.first_name.value.trim());
+            body.append('last_name', form.elements.last_name.value.trim());
+            body.append('applicant_email', emailInput.value.trim());
+            body.append('phone', form.elements.phone.value.trim());
+            body.append('job_id', form.elements.job_id.value);
+            files.resume.forEach(function (file) {
+                body.append('resume', file);
+            });
+            files.cover_letter.forEach(function (file) {
+                body.append('cover_letter', file);
+            });
+            files.writing_samples.forEach(function (file) {
+                body.append('writing_samples[]', file);
+            });
+            sampleLinks().forEach(function (input) {
+                var value = input.value.trim();
+                if (value) {
+                    body.append('sample_urls[]', value);
+                }
+            });
 
             submit.disabled = true;
             submit.textContent = 'Submitting…';
 
             fetch(block.dataset.endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: body
             })
                 .then(function (response) {
                     return response
@@ -362,7 +383,7 @@
                 .catch(function () {
                     summary.textContent =
                         "We couldn't reach the server. Check your connection and try again.";
-                    summary.hidden = false;
+                    showSummary();
                 })
                 .finally(function () {
                     submit.disabled = false;

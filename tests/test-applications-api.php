@@ -18,12 +18,29 @@ class Test_Applications_API extends WP_UnitTestCase {
         ], $overrides));
     }
 
-    private function dispatch_application(array $params) {
+    /**
+     * A resume is required, so attach a minimal valid one unless the caller
+     * passes its own $files.
+     */
+    private function dispatch_application(array $params, ?array $files = null) {
         $request = new WP_REST_Request('POST', '/massinc/v1/applications');
         foreach ($params as $key => $value) {
             $request->set_param($key, $value);
         }
+        $request->set_file_params($files ?? ['resume' => $this->make_upload()]);
         return rest_get_server()->dispatch($request);
+    }
+
+    private function make_upload($name = 'resume.pdf', $contents = "%PDF-1.4\n1 0 obj\n<<>>\nendobj\n") {
+        $tmp = wp_tempnam($name);
+        file_put_contents($tmp, $contents);
+        return [
+            'name'     => $name,
+            'type'     => 'application/pdf',
+            'tmp_name' => $tmp,
+            'error'    => UPLOAD_ERR_OK,
+            'size'     => filesize($tmp),
+        ];
     }
 
     public function test_valid_submission_persists_all_submitted_fields() {

@@ -112,4 +112,20 @@ class Application extends Model {
 
         return (int) $wpdb->insert_id;
     }
+
+    /**
+     * Delete an application row (used to roll back a failed submission).
+     *
+     * @param int $id
+     * @return bool
+     */
+    public static function delete($id) {
+        global $wpdb;
+        $id = absint($id);
+        if (!$id) {
+            return false;
+        }
+
+        return (bool) $wpdb->delete($wpdb->prefix . 'massinc_applications', ['id' => $id], ['%d']);
+    }
 }
