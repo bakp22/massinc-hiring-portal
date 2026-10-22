@@ -1,0 +1,397 @@
+/*
+ * Tokens and type scale come from the MassInc ATS hi-fi (01 · Application form).
+ * Fonts are self-hosted in assets/fonts (both SIL OFL, latin subset).
+ */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../../assets/fonts/inter-latin-wght-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Bitter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../../assets/fonts/bitter-latin-600-normal.woff2') format('woff2');
+}
+
+.massinc-application-form-block {
+    --color-text-primary: #0c1c35;
+    --color-text-secondary: #676767;
+    --color-text-link: #1b3257;
+    --color-text-on-brand: #fff;
+    --color-brand-default: #a61428;
+    --color-border-default: #d0d0d0;
+    --color-bg-input: #fff;
+    --color-bg-subtle: #f8f5f5;
+    --color-error: #b00020;
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-4xl: 80px;
+    --radius-sm: 4px;
+    --border-width-default: 1px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        sans-serif;
+    --font-serif: 'Bitter', Georgia, serif;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xl);
+    box-sizing: border-box;
+    padding: var(--spacing-2xl) var(--spacing-4xl) var(--spacing-4xl);
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+}
+
+.massinc-application-form-block [hidden] {
+    display: none !important;
+}
+
+.massinc-application-form-block > *,
+.massinc-application-form-block form {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.massinc-application-form-block p {
+    margin: 0;
+}
+
+.massinc-application-form-block > form,
+.massinc-application-form-block > .massinc-form-success {
+    max-width: 720px;
+}
+
+@media (max-width: 782px) {
+    .massinc-application-form-block {
+        padding: var(--spacing-lg) var(--spacing-md) var(--spacing-2xl);
+    }
+
+    .massinc-application-form-block .massinc-form-title {
+        font-size: 32px;
+        line-height: 40px;
+    }
+}
+
+/* Links */
+.massinc-back-link,
+.massinc-link {
+    color: var(--color-text-link);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-position: from-font;
+}
+
+.massinc-back-link {
+    align-self: flex-start;
+    width: auto;
+    font-size: 16px;
+    line-height: 24px;
+}
+
+/* Page header */
+.massinc-form-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.massinc-application-form-block .massinc-form-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 42px;
+    font-weight: 600;
+    line-height: 50px;
+    letter-spacing: -0.5px;
+    color: var(--color-text-primary);
+}
+
+.massinc-form-meta,
+.massinc-form-required-note,
+.massinc-field-hint,
+.massinc-dropzone-hint,
+.massinc-confirmation-note {
+    color: var(--color-text-secondary);
+}
+
+.massinc-form-meta {
+    font-size: 18px;
+    line-height: 28px;
+}
+
+.massinc-form-required-note,
+.massinc-confirmation-note,
+.massinc-upload > .massinc-field-hint {
+    font-size: 14px;
+    line-height: 22px;
+}
+
+/* Form */
+#massinc-app-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.massinc-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+}
+
+.massinc-field label,
+.massinc-label {
+    display: block;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.massinc-field input[type='text'],
+.massinc-field input[type='email'],
+.massinc-field input[type='tel'],
+.massinc-field input[type='url'] {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width-default) solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    font: 400 16px/26px var(--font-sans);
+    color: var(--color-text-primary);
+    background: var(--color-bg-input);
+}
+
+.massinc-field input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 1;
+}
+
+.massinc-field input:focus-visible,
+.massinc-submit:focus-visible,
+.massinc-file-remove:focus-visible {
+    outline: 3px solid var(--color-text-link);
+    outline-offset: 2px;
+}
+
+.massinc-field-hint {
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.massinc-field.has-error input[type='text'],
+.massinc-field.has-error input[type='email'],
+.massinc-field.has-error input[type='tel'],
+.massinc-field.has-error input[type='url'],
+.massinc-field.has-error .massinc-dropzone {
+    border-color: var(--color-error);
+}
+
+.massinc-field-error,
+.massinc-form-error-summary {
+    color: var(--color-error);
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.massinc-form-error-summary {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width-default) solid var(--color-error);
+    border-radius: var(--radius-sm);
+}
+
+/* Uploads */
+.massinc-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.massinc-file-list:empty {
+    display: none;
+}
+
+.massinc-file {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width-default) solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-input);
+}
+
+.massinc-file-badge {
+    flex: none;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-default);
+    color: var(--color-text-on-brand);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
+}
+
+.massinc-file-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.massinc-file-name {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    overflow-wrap: anywhere;
+}
+
+.massinc-file-meta {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-text-secondary);
+}
+
+.massinc-file-remove {
+    flex: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--color-text-link);
+    text-decoration: underline;
+    text-underline-position: from-font;
+    font: 400 13px/18px var(--font-sans);
+    cursor: pointer;
+}
+
+.massinc-dropzone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    border: var(--border-width-default) dashed var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-subtle);
+    text-align: center;
+}
+
+.massinc-dropzone.is-dragging {
+    border-color: var(--color-text-link);
+    background: #efe9e9;
+}
+
+/* The native input stays in the tab order but is visually replaced by the label. */
+.massinc-file-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.massinc-dropzone-prompt {
+    display: flex !important;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: 0;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    line-height: 24px !important;
+    color: var(--color-text-link);
+    pointer-events: none;
+}
+
+.massinc-dropzone:focus-within {
+    outline: 3px solid var(--color-text-link);
+    outline-offset: 2px;
+}
+
+.massinc-dropzone-hint {
+    font-size: 13px;
+    line-height: 18px;
+}
+
+/* Sample links */
+.massinc-link-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.massinc-link-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.massinc-link-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.massinc-add-link {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-link);
+    font: 500 16px/24px var(--font-sans);
+    text-decoration: underline;
+    text-underline-position: from-font;
+    cursor: pointer;
+}
+
+.massinc-add-link:focus-visible {
+    outline: 3px solid var(--color-text-link);
+    outline-offset: 2px;
+}
+
+/* Submit */
+.massinc-submit-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xs);
+}
+
+.massinc-submit {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: var(--border-width-default) solid var(--color-brand-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-default);
+    color: var(--color-text-on-brand);
+    font: 600 16px/24px var(--font-sans);
+    cursor: pointer;
+}
+
+.massinc-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.massinc-form-success {
+    padding: var(--spacing-lg);
+    border: var(--border-width-default) solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+}
