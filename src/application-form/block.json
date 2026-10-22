@@ -8,9 +8,18 @@
     "jobId": {
       "type": "number",
       "default": 0
+    },
+    "align": {
+      "type": "string",
+      "default": "full"
     }
+  },
+  "supports": {
+    "align": ["wide", "full"]
   },
   "textdomain": "minc-hiring",
   "editorScript": "file:./index.js",
+  "style": "file:./style.css",
+  "viewScript": "file:./view.js",
   "render": "file:./render.php"
 }
