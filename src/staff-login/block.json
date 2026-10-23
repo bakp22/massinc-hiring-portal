@@ -1,0 +1,21 @@
+{
+  "apiVersion": 3,
+  "name": "minc-hiring/staff-login",
+  "title": "Hiring Staff Login",
+  "description": "Display the MassINC staff sign-in screen for the applicant tracking portal.",
+  "category": "widgets",
+  "attributes": {
+    "align": {
+      "type": "string",
+      "default": "full"
+    }
+  },
+  "supports": {
+    "align": ["wide", "full"]
+  },
+  "textdomain": "minc-hiring",
+  "editorScript": "file:./index.js",
+  "style": "file:./style.css",
+  "viewScript": "file:./view.js",
+  "render": "file:./render.php"
+}
