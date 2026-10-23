@@ -1,0 +1,1 @@
+!function(){const{registerBlockType:n}=wp.blocks,{createElement:i}=wp.element;n("minc-hiring/staff-login",{edit:function(){return i("div",{className:"minc-hiring-staff-login-editor"},i("strong",null,"Hiring Staff Login"),i("p",null,"Staff sign-in form for the MassINC applicant tracking portal."))},save:function(){return null}})}();
