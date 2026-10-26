@@ -1,0 +1,216 @@
+/*
+ * Tokens and type scale come from the MassInc ATS hi-fi (Staff sign in).
+ * Fonts are self-hosted in assets/fonts (both SIL OFL, latin subset).
+ */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../../assets/fonts/inter-latin-wght-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Bitter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../../assets/fonts/bitter-latin-600-normal.woff2') format('woff2');
+}
+
+.massinc-staff-login-block {
+    --color-text-primary: #0c1c35;
+    --color-text-secondary: #676767;
+    --color-text-link: #1b3257;
+    --color-text-on-brand: #fff;
+    --color-brand-default: #a61428;
+    --color-border-default: #d0d0d0;
+    --color-border-subtle: #e3dfdb;
+    --color-bg-input: #fff;
+    --color-bg-subtle: #f8f5f5;
+    --color-error: #b00020;
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-4xl: 80px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --border-width-default: 1px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        sans-serif;
+    --font-serif: 'Bitter', Georgia, serif;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 75vh;
+    padding: var(--spacing-4xl) var(--spacing-lg);
+    background: var(--color-bg-subtle);
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+}
+
+.massinc-staff-login-block [hidden] {
+    display: none !important;
+}
+
+.massinc-staff-login-block p {
+    margin: 0;
+}
+
+.massinc-login-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px;
+    border: var(--border-width-default) solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-input);
+    box-shadow: 0 4px 16px rgba(12, 28, 53, 0.06);
+}
+
+.massinc-login-logo {
+    align-self: flex-start;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: var(--border-width-default) dashed var(--color-border-default);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -0.2px;
+    color: var(--color-text-primary);
+}
+
+.massinc-login-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.massinc-staff-login-block .massinc-login-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 40px;
+    letter-spacing: -0.4px;
+    color: var(--color-text-primary);
+}
+
+.massinc-login-subtitle {
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--color-text-secondary);
+}
+
+#massinc-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.massinc-staff-login-block .massinc-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+}
+
+.massinc-staff-login-block .massinc-field label {
+    display: block;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    color: var(--color-text-primary);
+}
+
+.massinc-staff-login-block .massinc-field input[type='email'],
+.massinc-staff-login-block .massinc-field input[type='password'],
+.massinc-staff-login-block .massinc-field input[type='text'] {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width-default) solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    font: 400 16px/26px var(--font-sans);
+    color: var(--color-text-primary);
+    background: var(--color-bg-input);
+}
+
+.massinc-staff-login-block .massinc-field input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 1;
+}
+
+.massinc-staff-login-block .massinc-field input:focus-visible,
+.massinc-staff-login-block .massinc-submit:focus-visible {
+    outline: 3px solid var(--color-text-link);
+    outline-offset: 2px;
+}
+
+.massinc-staff-login-block .massinc-field.has-error input {
+    border-color: var(--color-error);
+}
+
+.massinc-staff-login-block .massinc-field-error,
+.massinc-staff-login-block .massinc-form-error-summary {
+    color: var(--color-error);
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.massinc-staff-login-block .massinc-form-error-summary {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width-default) solid var(--color-error);
+    border-radius: var(--radius-sm);
+}
+
+.massinc-staff-login-block .massinc-submit {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: var(--border-width-default) solid var(--color-brand-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-default);
+    color: var(--color-text-on-brand);
+    font: 600 16px/24px var(--font-sans);
+    text-align: center;
+    cursor: pointer;
+}
+
+.massinc-staff-login-block .massinc-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.massinc-login-footer {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+@media (max-width: 782px) {
+    .massinc-staff-login-block {
+        padding: var(--spacing-2xl) var(--spacing-md);
+    }
+
+    .massinc-login-card {
+        padding: var(--spacing-xl) var(--spacing-lg);
+    }
+}
