@@ -98,13 +98,13 @@ $upload_fields = [
                 <div class="massinc-dropzone">
                     <input type="file" class="massinc-file-input"
                            id="massinc-<?php echo esc_attr($name); ?>"
-                           accept=".pdf,.doc,.docx"
+                           accept=".pdf,.docx"
                            <?php echo $max > 1 ? 'multiple' : ''; ?>
                            aria-labelledby="massinc-<?php echo esc_attr($name); ?>-label">
                     <label for="massinc-<?php echo esc_attr($name); ?>" class="massinc-dropzone-prompt">
                         <span aria-hidden="true">+</span> <span class="massinc-link">Drop a file or browse</span>
                     </label>
-                    <span class="massinc-dropzone-hint">PDF, DOC or DOCX, up to 10 MB</span>
+                    <span class="massinc-dropzone-hint">PDF or DOCX, up to 10 MB</span>
                 </div>
                 <?php if ($hint) : ?>
                     <p class="massinc-field-hint"><?php echo esc_html($hint); ?></p>
