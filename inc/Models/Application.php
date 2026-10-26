@@ -42,6 +42,31 @@ class Application extends Model {
     }
 
     /**
+     * Whether a candidate has already applied to a given job.
+     *
+     * @param int $job_id
+     * @param int $candidate_id
+     * @return bool
+     */
+    public static function exists_for($job_id, $candidate_id) {
+        global $wpdb;
+        $job_id = absint($job_id);
+        $candidate_id = absint($candidate_id);
+        if (!$job_id || !$candidate_id) {
+            return false;
+        }
+
+        $table = $wpdb->prefix . 'massinc_applications';
+        return (bool) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT id FROM {$table} WHERE job_id = %d AND candidate_id = %d LIMIT 1",
+                $job_id,
+                $candidate_id
+            )
+        );
+    }
+
+    /**
      * Insert application record into wp_massinc_applications mapping job_id and candidate_id.
      *
      * @param array $data
