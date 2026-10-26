@@ -292,6 +292,50 @@
         function showSummary() {
             summary.hidden = false;
             summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        function setConfirm(name, text) {
+            success
+                .querySelectorAll('[data-confirm="' + name + '"]')
+                .forEach(function (el) {
+                    el.textContent = text;
+                });
+        }
+
+        function showConfirmation(body) {
+            var now = new Date();
+            var attached = []
+                .concat(files.resume, files.cover_letter, files.writing_samples)
+                .map(function (file) {
+                    return file.name;
+                });
+
+            setConfirm('first_name', form.elements.first_name.value.trim());
+            setConfirm('email', emailInput.value.trim());
+            setConfirm('reference', String(body.application_id));
+            setConfirm(
+                'submitted',
+                now.toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) +
+                    ' at ' +
+                    now.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    })
+            );
+            setConfirm('attached', attached.join(', '));
+            success.querySelector('[data-confirm-row="attached"]').hidden =
+                attached.length === 0;
+
+            block.classList.add('is-submitted');
+            form.hidden = true;
+            success.hidden = false;
+            window.scrollTo({
+                top: block.getBoundingClientRect().top + window.scrollY - 24,
+                behavior: 'smooth'
+            });
         }
 
         function showServerError(body, status) {
@@ -370,12 +414,7 @@
                 })
                 .then(function (result) {
                     if (result.ok) {
-                        form.hidden = true;
-                        success.hidden = false;
-                        success.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
+                        showConfirmation(result.body);
                         return;
                     }
                     showServerError(result.body, result.status);

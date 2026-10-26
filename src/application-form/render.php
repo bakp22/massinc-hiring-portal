@@ -135,8 +135,31 @@ $upload_fields = [
     </form>
 
     <div class="massinc-form-success" role="status" hidden>
-        <h3>Application submitted</h3>
-        <p>Thanks for applying. We'll be in touch.</p>
-        <p><a class="massinc-back-link" href="<?php echo esc_url($back_url); ?>">&larr; All positions</a></p>
+        <div class="massinc-success-mark" aria-hidden="true">&#10003;</div>
+        <h2 class="massinc-success-title">Application received</h2>
+        <p class="massinc-success-lead">
+            Thanks, <span data-confirm="first_name"></span>. We've emailed a copy of your application to
+            <span data-confirm="email"></span>. The MassInc team reviews applications on a rolling basis
+            and will be in touch within two weeks.
+        </p>
+        <dl class="massinc-success-summary">
+            <div class="massinc-success-row">
+                <dt>Position</dt>
+                <dd><?php echo esc_html($job->get('title')); ?></dd>
+            </div>
+            <div class="massinc-success-row">
+                <dt>Reference ID</dt>
+                <dd data-confirm="reference"></dd>
+            </div>
+            <div class="massinc-success-row">
+                <dt>Submitted</dt>
+                <dd data-confirm="submitted"></dd>
+            </div>
+            <div class="massinc-success-row" data-confirm-row="attached">
+                <dt>Attached</dt>
+                <dd data-confirm="attached"></dd>
+            </div>
+        </dl>
+        <a class="massinc-back-link" href="<?php echo esc_url($back_url); ?>">Back to open positions</a>
     </div>
 </div>
