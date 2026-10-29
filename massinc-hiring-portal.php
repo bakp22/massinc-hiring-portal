@@ -21,6 +21,7 @@ require_once MINC_HIRING_PATH . 'inc/Models/Candidate.php';
 require_once MINC_HIRING_PATH . 'inc/Models/Application.php';
 require_once MINC_HIRING_PATH . 'inc/Models/Attachment.php';
 require_once MINC_HIRING_PATH . 'inc/Attachments.php';
+require_once MINC_HIRING_PATH . 'inc/notifications.php';
 require_once MINC_HIRING_PATH . 'inc/admin.php';
 require_once MINC_HIRING_PATH . 'inc/api.php';
 require_once MINC_HIRING_PATH . 'inc/blocks.php';
@@ -44,6 +45,7 @@ register_deactivation_hook(__FILE__, 'minc_hiring_deactivate');
 add_action('plugins_loaded', function () {
     \MassINC\Database::maybe_upgrade();
     minc_hiring_register_roles();
+    \MassINC\Notifications::init();
     minc_hiring_register_blocks();
     minc_hiring_register_admin();
     minc_hiring_register_api();
