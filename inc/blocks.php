@@ -3,9 +3,14 @@ defined('ABSPATH') || exit;
 
 function minc_hiring_register_blocks() {
     add_action('init', function () {
+        // Shared by the dashboard and candidate detail blocks (see their block.json "style").
+        wp_register_style('minc-hiring-ats-admin', MINC_HIRING_URL . 'src/shared/admin.css', [], MINC_HIRING_VERSION);
+
         register_block_type(MINC_HIRING_PATH . 'src/job-list');
         register_block_type(MINC_HIRING_PATH . 'src/application-form');
         register_block_type(MINC_HIRING_PATH . 'src/staff-login');
+        register_block_type(MINC_HIRING_PATH . 'src/candidate-dashboard');
+        register_block_type(MINC_HIRING_PATH . 'src/candidate-detail');
     });
 
     add_action('wp_login_failed', function () {

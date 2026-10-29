@@ -1,0 +1,25 @@
+{
+  "apiVersion": 3,
+  "name": "minc-hiring/candidate-detail",
+  "title": "Hiring Candidate Detail",
+  "description": "Staff-only candidate page: materials, ratings, notes and stage controls.",
+  "category": "widgets",
+  "attributes": {
+    "dashboardUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "align": {
+      "type": "string",
+      "default": "full"
+    }
+  },
+  "supports": {
+    "align": ["wide", "full"]
+  },
+  "textdomain": "minc-hiring",
+  "editorScript": "file:./index.js",
+  "style": ["minc-hiring-ats-admin", "file:./style.css"],
+  "viewScript": "file:./view.js",
+  "render": "file:./render.php"
+}

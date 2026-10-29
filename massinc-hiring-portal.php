@@ -24,6 +24,7 @@ require_once MINC_HIRING_PATH . 'inc/Attachments.php';
 require_once MINC_HIRING_PATH . 'inc/notifications.php';
 require_once MINC_HIRING_PATH . 'inc/admin.php';
 require_once MINC_HIRING_PATH . 'inc/api.php';
+require_once MINC_HIRING_PATH . 'inc/ats-view.php';
 require_once MINC_HIRING_PATH . 'inc/blocks.php';
 
 function minc_hiring_install() {
