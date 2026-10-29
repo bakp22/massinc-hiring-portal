@@ -2,6 +2,7 @@
 namespace MassINC;
 
 use MassINC\Models\Application;
+use MassINC\Models\Attachment;
 use MassINC\Models\Candidate;
 use MassINC\Models\Job;
 
@@ -13,6 +14,12 @@ class API {
             'methods'  => \WP_REST_Server::READABLE,
             'callback' => [self::class, 'get_jobs'],
             'permission_callback' => '__return_true',
+        ]);
+
+        register_rest_route('massinc/v1', '/attachments/(?P<id>\d+)/download', [
+            'methods'  => \WP_REST_Server::READABLE,
+            'callback' => [self::class, 'download_attachment'],
+            'permission_callback' => [self::class, 'can_view_applications'],
         ]);
 
         register_rest_route('massinc/v1', '/applications', [
@@ -97,6 +104,19 @@ class API {
             return new \WP_Error('massinc_invalid_position', 'This position is not open for applications.', ['status' => 400]);
         }
 
+        // Validate files and links before writing anything, so a rejected
+        // submission leaves no candidate or application behind.
+        $files  = Attachments::collect($request->get_file_params());
+        $links  = Attachments::normalize_links($request->get_param('sample_urls'));
+        $errors = Attachments::validate($files, $links);
+        if ($errors) {
+            return new \WP_Error(
+                'massinc_invalid_attachments',
+                reset($errors),
+                ['status' => 400, 'params' => $errors]
+            );
+        }
+
         // Reuse the candidate record if this email has applied before,
         // refreshing their name/phone in case it changed since last time.
         $candidate = Candidate::get_by_email($email);
@@ -136,9 +156,60 @@ class API {
             return new \WP_Error('massinc_application_failed', 'Could not save your application. Please try again.', ['status' => 500]);
         }
 
+        $saved = Attachments::save_all($application_id, $files, $links);
+        if (is_wp_error($saved)) {
+            Attachments::purge($application_id);
+            Application::delete($application_id);
+            return $saved;
+        }
+
         return new \WP_REST_Response([
             'status'         => 'submitted',
             'application_id' => $application_id,
         ], 201);
+    }
+
+    public static function can_view_applications() {
+        if (current_user_can('view_minc_applications')) {
+            return true;
+        }
+        return new \WP_Error(
+            'rest_forbidden',
+            'You are not allowed to download application files.',
+            ['status' => is_user_logged_in() ? 403 : 401]
+        );
+    }
+
+    /**
+     * Stream a stored attachment to staff. Files are never served by URL.
+     */
+    public static function download_attachment(\WP_REST_Request $request) {
+        $attachment = Attachment::get_by_id($request['id']);
+        $path = $attachment && !$attachment->is_link()
+            ? Attachments::path_for($attachment->get('stored_name'))
+            : '';
+
+        if (!$path || !file_exists($path)) {
+            return new \WP_Error('massinc_attachment_not_found', 'File not found.', ['status' => 404]);
+        }
+
+        $filename = $attachment->get('original_name') ?: 'attachment';
+        $ascii = preg_replace('/[^A-Za-z0-9._-]/', '_', $filename);
+
+        // Replace JSON serialization of this response with the raw file.
+        add_filter('rest_pre_serve_request', function ($served) use ($attachment, $path, $filename, $ascii) {
+            if ($served) {
+                return $served;
+            }
+            header('Content-Type: ' . $attachment->get('mime_type'));
+            header("Content-Disposition: attachment; filename=\"{$ascii}\"; filename*=UTF-8''" . rawurlencode($filename));
+            header('Content-Length: ' . filesize($path));
+            header('X-Content-Type-Options: nosniff');
+            header('Cache-Control: private, no-store');
+            readfile($path);
+            return true;
+        });
+
+        return new \WP_REST_Response(null, 200);
     }
 }

@@ -5,6 +5,21 @@ defined('ABSPATH') || exit;
 
 class Database {
     /**
+     * Bump when create_tables() changes so existing installs pick it up.
+     */
+    const SCHEMA_VERSION = '3';
+
+    /**
+     * Run create_tables() on installs created before the current schema
+     * version (activation only fires once, so new tables need this).
+     */
+    public static function maybe_upgrade() {
+        if (get_option('minc_hiring_db_version') !== self::SCHEMA_VERSION) {
+            self::create_tables();
+        }
+    }
+
+    /**
      * Create or update custom database tables.
      * Refer to docs/database.md for required column types and indices.
      */
@@ -15,6 +30,7 @@ class Database {
         $jobs_table          = $wpdb->prefix . 'massinc_jobs';
         $candidates_table    = $wpdb->prefix . 'massinc_candidates';
         $applications_table  = $wpdb->prefix . 'massinc_applications';
+        $attachments_table   = $wpdb->prefix . 'massinc_application_attachments';
         $notifications_table = $wpdb->prefix . 'massinc_notifications';
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -67,6 +83,20 @@ class Database {
             KEY assigned_to (assigned_to)
         ) $charset_collate;
 
+        CREATE TABLE $attachments_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            application_id bigint(20) unsigned NOT NULL,
+            kind varchar(30) NOT NULL,
+            original_name varchar(255) NOT NULL DEFAULT '',
+            stored_name varchar(100) NOT NULL DEFAULT '',
+            mime_type varchar(100) NOT NULL DEFAULT '',
+            size_bytes bigint(20) unsigned NOT NULL DEFAULT 0,
+            url text DEFAULT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY application_id (application_id)
+        ) $charset_collate;
+
         CREATE TABLE $notifications_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             trigger_key varchar(100) NOT NULL DEFAULT '',
@@ -89,5 +119,6 @@ class Database {
         ) $charset_collate;";
 
         dbDelta($sql);
+        update_option('minc_hiring_db_version', self::SCHEMA_VERSION);
     }
 }
