@@ -171,16 +171,16 @@ function minc_hiring_admin_emails_page() {
     $env_staff    = \MassINC\Notifications::get_env('MASSINC_STAFF_NOTIFICATION_EMAIL', '');
     ?>
     <div class="wrap">
-        <h1>Hiring — Email Notifications (SendGrid)</h1>
+        <h1>Hiring — Email Notifications (Resend)</h1>
 
         <div class="card" style="max-width: 900px; margin-bottom: 20px;">
-            <h2>SendGrid Environment Status</h2>
+            <h2>Resend Environment Status</h2>
             <p>
-                <strong>SendGrid API Key (<code>SENDGRID_API_KEY</code>):</strong>
+                <strong>Resend API Key (<code>RESEND_API_KEY</code>):</strong>
                 <?php if ($has_api_key): ?>
                     <span style="color: #008a20; font-weight: 600;">Configured via environment variable</span>
                 <?php else: ?>
-                    <span style="color: #d63638; font-weight: 600;">Not set (set <code>SENDGRID_API_KEY</code> in your environment or <code>.env</code>)</span>
+                    <span style="color: #d63638; font-weight: 600;">Not set (set <code>RESEND_API_KEY</code> in your environment or <code>.env</code>)</span>
                 <?php endif; ?>
             </p>
             <p>
@@ -257,21 +257,6 @@ function minc_hiring_admin_emails_page() {
                                 value="<?php echo esc_attr($trigger['subject']); ?>"
                             >
                         </label>
-                    </p>
-
-                    <p>
-                        <label>
-                            <strong>SendGrid Dynamic Template ID (Optional)</strong><br>
-                            <input
-                                type="text"
-                                class="regular-text"
-                                name="templates[<?php echo esc_attr($key); ?>][sendgrid_template_id]"
-                                value="<?php echo esc_attr($trigger['sendgrid_template_id'] ?? ''); ?>"
-                                placeholder="d-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                            >
-                        </label>
-                        <br>
-                        <span class="description">If set, SendGrid will render this Dynamic Template ID with the placeholder variables instead of the HTML body below.</span>
                     </p>
 
                     <p>

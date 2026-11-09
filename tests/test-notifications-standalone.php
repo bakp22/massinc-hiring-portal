@@ -5,7 +5,7 @@
  * Usage (Mock Mode - runs automated assertion suite):
  *   docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/test-notifications-standalone.php
  *
- * Usage (Live Mode - sends a real test email via SendGrid API using .env):
+ * Usage (Live Mode - sends a real test email via Resend API using .env):
  *   docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/test-notifications-standalone.php --live --to=you@example.com
  */
 
@@ -125,8 +125,8 @@ $GLOBALS['wp_options']       = [
 ];
 $GLOBALS['wp_cron_events']   = [];
 $GLOBALS['http_requests']    = [];
-$GLOBALS['mock_http_status'] = 202;
-$GLOBALS['mock_http_body']   = '';
+$GLOBALS['mock_http_status'] = 200;
+$GLOBALS['mock_http_body']   = json_encode(['id' => 're_mock_12345']);
 $GLOBALS['live_http_mode']   = false;
 $GLOBALS['captured_errors']  = [];
 
@@ -289,7 +289,7 @@ function wp_remote_post($url, $args = []) {
             $status = (int) $m[1];
         }
         if ($resp_body === false && $status === 0) {
-            return new WP_Error('http_request_failed', 'Could not connect to SendGrid API.');
+            return new WP_Error('http_request_failed', 'Could not connect to Resend API.');
         }
         return [
             'response' => ['code' => $status],
@@ -345,7 +345,7 @@ if (in_array('--live', $argv_list, true)) {
     $app_id       = Application::create(['job_id' => $job_id, 'candidate_id' => $candidate_id]);
 
     $logs = Notifications::get_recent_logs(10);
-    echo "Live SendGrid test complete for Application #{$app_id}.\n";
+    echo "Live Resend test complete for Application #{$app_id}.\n";
     foreach ($logs as $log) {
         echo sprintf(" - [%s] to=%s status=%s attempts=%d error=%s\n", $log->trigger_key, $log->recipient_email, $log->status, $log->attempts, $log->last_error ?: 'none');
     }
@@ -370,30 +370,31 @@ function assert_true($condition, $description) {
     }
 }
 
-echo "=== MassINC Hiring Portal: Email Notifications Test Suite ===\n\n";
+echo "=== MassINC Hiring Portal: Email Notifications Test Suite (Resend) ===\n\n";
 
 // Configure test environment variables
-putenv('SENDGRID_API_KEY=SG.test_key_from_env_12345');
-putenv('SENDGRID_FROM_EMAIL=careers@massinc.org');
-putenv('SENDGRID_FROM_NAME=MassINC Careers');
+putenv('RESEND_API_KEY=re_test_key_from_env_12345');
+putenv('RESEND_FROM_EMAIL=careers@massinc.org');
+putenv('RESEND_FROM_NAME=MassINC Careers');
 putenv('MASSINC_STAFF_NOTIFICATION_EMAIL=staff1@massinc.org, staff2@massinc.org');
-$_ENV['SENDGRID_API_KEY']                 = 'SG.test_key_from_env_12345';
-$_ENV['SENDGRID_FROM_EMAIL']              = 'careers@massinc.org';
-$_ENV['SENDGRID_FROM_NAME']               = 'MassINC Careers';
+$_ENV['RESEND_API_KEY']                   = 're_test_key_from_env_12345';
+$_ENV['RESEND_FROM_EMAIL']                = 'careers@massinc.org';
+$_ENV['RESEND_FROM_NAME']                 = 'MassINC Careers';
 $_ENV['MASSINC_STAFF_NOTIFICATION_EMAIL'] = 'staff1@massinc.org, staff2@massinc.org';
 
 Notifications::init();
 
 // 1. Environment variables test
 echo "1. Environment Variable Configuration\n";
-assert_true(Notifications::get_api_key() === 'SG.test_key_from_env_12345', 'Reads SENDGRID_API_KEY from environment variable');
-assert_true(Notifications::get_from_email() === 'careers@massinc.org', 'Reads SENDGRID_FROM_EMAIL from environment variable');
+assert_true(Notifications::get_api_key() === 're_test_key_from_env_12345', 'Reads RESEND_API_KEY from environment variable');
+assert_true(Notifications::get_from_email() === 'careers@massinc.org', 'Reads RESEND_FROM_EMAIL from environment variable');
 assert_true(Notifications::get_staff_recipient_emails() === ['staff1@massinc.org', 'staff2@massinc.org'], 'Parses comma-separated MASSINC_STAFF_NOTIFICATION_EMAIL recipients');
 
-// 2. Application Submission Triggers (Applicant + Staff)
+// 2. Application Submission Triggers (Candidate + Employer/Staff)
 echo "\n2. Automatic Emails on Application Submission\n";
-$GLOBALS['http_requests'] = [];
-$GLOBALS['mock_http_status'] = 202;
+$GLOBALS['http_requests']    = [];
+$GLOBALS['mock_http_status'] = 200;
+$GLOBALS['mock_http_body']   = json_encode(['id' => 're_mock_12345']);
 
 $job_id = Job::create([
     'title'           => 'Policy Research Intern',
@@ -411,48 +412,55 @@ $application_id = Application::create([
     'candidate_id' => $candidate_id,
 ]);
 
-assert_true(count($GLOBALS['http_requests']) === 3, 'Dispatches 1 applicant confirmation + 2 staff notification requests via SendGrid');
+assert_true(count($GLOBALS['http_requests']) === 3, 'Dispatches 1 candidate confirmation + 2 employer/staff notification requests via Resend');
+assert_true($GLOBALS['http_requests'][0]['url'] === 'https://api.resend.com/emails', 'Posts to Resend Emails API endpoint');
 
 $applicant_req = $GLOBALS['http_requests'][0]['body'];
 $staff_req_1   = $GLOBALS['http_requests'][1]['body'];
 $staff_req_2   = $GLOBALS['http_requests'][2]['body'];
 
 assert_true(
-    ($applicant_req['personalizations'][0]['to'][0]['email'] ?? '') === 'jane.doe@example.org',
-    'Applicant confirmation email is addressed to jane.doe@example.org'
+    ($applicant_req['to'][0] ?? '') === 'jane.doe@example.org',
+    'Candidate confirmation email is addressed to jane.doe@example.org'
+);
+assert_true(
+    ($applicant_req['from'] ?? '') === 'MassINC Careers <careers@massinc.org>',
+    'Candidate confirmation email uses formatted Resend from header'
 );
 assert_true(
     strpos($applicant_req['subject'] ?? '', 'Policy Research Intern') !== false,
-    'Applicant confirmation subject interpolates {{job_title}}'
+    'Candidate confirmation subject interpolates {{job_title}}'
 );
 assert_true(
-    strpos($applicant_req['content'][1]['value'] ?? '', 'Hi Jane,') !== false,
-    'Applicant confirmation body interpolates {{first_name}}'
+    strpos($applicant_req['html'] ?? '', 'Hi Jane,') !== false,
+    'Candidate confirmation HTML body interpolates {{first_name}}'
 );
 assert_true(
-    ($staff_req_1['personalizations'][0]['to'][0]['email'] ?? '') === 'staff1@massinc.org' &&
-    ($staff_req_2['personalizations'][0]['to'][0]['email'] ?? '') === 'staff2@massinc.org',
-    'Staff notifications are sent to all configured staff emails'
+    ($staff_req_1['to'][0] ?? '') === 'staff1@massinc.org' &&
+    ($staff_req_2['to'][0] ?? '') === 'staff2@massinc.org',
+    'Employer/staff notifications are sent to all configured staff emails'
 );
 assert_true(
-    strpos($staff_req_1['subject'] ?? '', 'Jane Doe for Policy Research Intern') !== false,
-    'Staff notification subject interpolates {{applicant_name}} and {{job_title}}'
+    strpos($staff_req_1['subject'] ?? '', 'Jane Doe has applied to Policy Research Intern') !== false,
+    'Employer/staff notification subject states that candidate X has applied to position Y'
+);
+assert_true(
+    strpos($staff_req_1['html'] ?? '', '<strong>Jane Doe</strong> has applied to <strong>Policy Research Intern</strong>') !== false,
+    'Employer/staff notification HTML body states that candidate X has applied to position Y'
 );
 
 // 3. Editable Email Templates Without Code Changes
 echo "\n3. Editable Email Templates (No Code Changes Required)\n";
 Notifications::save_templates([
     'application_submitted_applicant' => [
-        'enabled'              => true,
-        'subject'              => 'Custom Subject for {{applicant_name}} (#{{application_id}})',
-        'body'                 => '<p>Custom body for {{job_title}}</p>',
-        'sendgrid_template_id' => 'd-customtemplate12345',
+        'enabled' => true,
+        'subject' => 'Custom Subject for {{applicant_name}} (#{{application_id}})',
+        'body'    => '<p>Custom body for {{job_title}}</p>',
     ],
     'application_submitted_staff' => [
-        'enabled'              => false, // disable staff trigger to verify toggle
-        'subject'              => 'Staff Subject',
-        'body'                 => '<p>Staff Body</p>',
-        'sendgrid_template_id' => '',
+        'enabled' => false, // disable staff trigger to verify toggle
+        'subject' => 'Staff Subject',
+        'body'    => '<p>Staff Body</p>',
     ],
 ]);
 
@@ -469,9 +477,8 @@ assert_true(
     'Uses updated template subject from wp_options without code changes'
 );
 assert_true(
-    ($custom_req['template_id'] ?? '') === 'd-customtemplate12345' &&
-    ($custom_req['personalizations'][0]['dynamic_template_data']['job_title'] ?? '') === 'Policy Research Intern',
-    'Passes SendGrid Dynamic Template ID and dynamic_template_data when configured'
+    ($custom_req['html'] ?? '') === '<p>Custom body for Policy Research Intern</p>',
+    'Uses updated template HTML body from wp_options without code changes'
 );
 
 // Restore default templates for retry tests
@@ -482,7 +489,7 @@ echo "\n4. Delivery Failure Logging & Retry Handling\n";
 $GLOBALS['http_requests']    = [];
 $GLOBALS['wp_cron_events']   = [];
 $GLOBALS['mock_http_status'] = 503;
-$GLOBALS['mock_http_body']   = json_encode(['errors' => [['message' => 'Service temporarily unavailable']]]);
+$GLOBALS['mock_http_body']   = json_encode(['statusCode' => 503, 'message' => 'Service temporarily unavailable', 'name' => 'application_error']);
 
 // Restrict to 1 staff email for simpler counting
 putenv('MASSINC_STAFF_NOTIFICATION_EMAIL=staff1@massinc.org');
@@ -501,29 +508,29 @@ assert_true(
     'Marks failed delivery as status="retrying" with attempts=1'
 );
 assert_true(
-    strpos((string) $latest_log->last_error, 'SendGrid HTTP 503: Service temporarily unavailable') !== false,
-    'Logs detailed SendGrid error message on failure'
+    strpos((string) $latest_log->last_error, 'Resend HTTP 503: Service temporarily unavailable') !== false,
+    'Logs detailed Resend error message on failure'
 );
 assert_true(
     wp_next_scheduled(Notifications::CRON_RETRY_HOOK, [(int) $latest_log->id]) !== false,
     'Schedules automatic WP-Cron retry event with exponential backoff'
 );
 
-// Now simulate SendGrid recovering (HTTP 202) and execute the scheduled retry
-$GLOBALS['mock_http_status'] = 202;
-$GLOBALS['mock_http_body']   = '';
+// Now simulate Resend recovering (HTTP 200) and execute the scheduled retry
+$GLOBALS['mock_http_status'] = 200;
+$GLOBALS['mock_http_body']   = json_encode(['id' => 're_recovered_123']);
 $retry_result = Notifications::retry_notification((int) $latest_log->id);
 
 $updated_row = $GLOBALS['wpdb']->get_row("SELECT * FROM wp_massinc_notifications WHERE id = {$latest_log->id}");
 assert_true(
     $retry_result === true && $updated_row->status === 'sent' && (int) $updated_row->attempts === 2 && $updated_row->last_error === null,
-    'Retry succeeds when SendGrid recovers and transitions status to "sent" (attempts=2)'
+    'Retry succeeds when Resend recovers and transitions status to "sent" (attempts=2)'
 );
 
 // 5. Exhausting Max Retries -> Permanent Failure
 echo "\n5. Max Retries Exhaustion\n";
 $GLOBALS['mock_http_status'] = 500;
-$GLOBALS['mock_http_body']   = json_encode(['errors' => [['message' => 'Internal server error']]]);
+$GLOBALS['mock_http_body']   = json_encode(['statusCode' => 500, 'message' => 'Internal server error', 'name' => 'internal_server_error']);
 
 $failing_notif_id = Notifications::dispatch_trigger(
     'application_submitted_applicant',
@@ -545,7 +552,8 @@ assert_true(
 
 // 6. Extensibility: Adding a New Trigger
 echo "\n6. Adding a Custom Email Trigger\n";
-$GLOBALS['mock_http_status'] = 202;
+$GLOBALS['mock_http_status'] = 200;
+$GLOBALS['mock_http_body']   = json_encode(['id' => 're_custom_123']);
 Notifications::register_trigger('application_status_interview', [
     'label'          => 'Applicant Interview Invitation',
     'recipient_type' => 'applicant',

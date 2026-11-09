@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
 class Notifications {
     const OPTION_TEMPLATES   = 'minc_email_templates';
     const OPTION_STAFF_EMAIL = 'minc_staff_notification_email';
-    const SENDGRID_ENDPOINT  = 'https://api.sendgrid.com/v3/mail/send';
+    const RESEND_ENDPOINT    = 'https://api.resend.com/emails';
     const MAX_ATTEMPTS       = 3;
     const CRON_RETRY_HOOK    = 'massinc_retry_failed_email';
 
@@ -40,23 +40,21 @@ class Notifications {
      */
     public static function register_default_triggers() {
         self::register_trigger('application_submitted_applicant', [
-            'label'                => 'Applicant Confirmation (On Submission)',
-            'description'          => 'Sent to the applicant immediately after they submit an application.',
-            'recipient_type'       => 'applicant',
-            'enabled'              => true,
-            'sendgrid_template_id' => '',
-            'subject'              => 'Application Received: {{job_title}} — MassINC',
-            'body'                 => "<p>Hi {{first_name}},</p>\n<p>Thank you for applying for the <strong>{{job_title}}</strong> position at MassINC.</p>\n<p>We have received your application (Reference #{{application_id}}) submitted on {{submitted_at}}. Our hiring team will review your materials and follow up with you regarding next steps.</p>\n<p>Best regards,<br>The MassINC Hiring Team</p>",
+            'label'          => 'Applicant Confirmation (On Submission)',
+            'description'    => 'Sent to the candidate immediately after they complete an application.',
+            'recipient_type' => 'applicant',
+            'enabled'        => true,
+            'subject'        => 'Application Received: {{job_title}} — MassINC',
+            'body'           => "<p>Hi {{first_name}},</p>\n<p>Thank you for applying for the <strong>{{job_title}}</strong> position at MassINC.</p>\n<p>We have received your application (Reference #{{application_id}}) submitted on {{submitted_at}}. Our hiring team will review your materials and follow up with you regarding next steps.</p>\n<p>Best regards,<br>The MassINC Hiring Team</p>",
         ]);
 
         self::register_trigger('application_submitted_staff', [
-            'label'                => 'Staff Notification (New Application)',
-            'description'          => 'Sent to hiring staff whenever a new application is submitted.',
-            'recipient_type'       => 'staff',
-            'enabled'              => true,
-            'sendgrid_template_id' => '',
-            'subject'              => 'New Application: {{applicant_name}} for {{job_title}}',
-            'body'                 => "<p>A new application has been submitted on the MassINC Hiring Portal.</p>\n<ul>\n<li><strong>Position:</strong> {{job_title}} ({{job_location}})</li>\n<li><strong>Applicant:</strong> {{applicant_name}}</li>\n<li><strong>Email:</strong> {{candidate_email}}</li>\n<li><strong>Phone:</strong> {{candidate_phone}}</li>\n<li><strong>Application ID:</strong> #{{application_id}}</li>\n<li><strong>Submitted At:</strong> {{submitted_at}}</li>\n</ul>\n<p><a href=\"{{admin_applications_url}}\">View Applications in WordPress Admin</a></p>",
+            'label'          => 'Employer / Staff Notification (New Application)',
+            'description'    => 'Sent to employers/hiring staff whenever a candidate applies to a position.',
+            'recipient_type' => 'staff',
+            'enabled'        => true,
+            'subject'        => 'New Application: {{applicant_name}} has applied to {{job_title}}',
+            'body'           => "<p><strong>{{applicant_name}}</strong> has applied to <strong>{{job_title}}</strong> on the MassINC Hiring Portal.</p>\n<ul>\n<li><strong>Position:</strong> {{job_title}} ({{job_location}})</li>\n<li><strong>Applicant:</strong> {{applicant_name}}</li>\n<li><strong>Email:</strong> {{candidate_email}}</li>\n<li><strong>Phone:</strong> {{candidate_phone}}</li>\n<li><strong>Application ID:</strong> #{{application_id}}</li>\n<li><strong>Submitted At:</strong> {{submitted_at}}</li>\n</ul>\n<p><a href=\"{{admin_applications_url}}\">View Applications in WordPress Admin</a></p>",
         ]);
     }
 
@@ -73,13 +71,12 @@ class Notifications {
         }
 
         self::$triggers[$trigger_key] = wp_parse_args($config, [
-            'label'                => ucwords(str_replace('_', ' ', $trigger_key)),
-            'description'          => '',
-            'recipient_type'       => 'applicant',
-            'enabled'              => true,
-            'sendgrid_template_id' => '',
-            'subject'              => '',
-            'body'                 => '',
+            'label'          => ucwords(str_replace('_', ' ', $trigger_key)),
+            'description'    => '',
+            'recipient_type' => 'applicant',
+            'enabled'        => true,
+            'subject'        => '',
+            'body'           => '',
         ]);
     }
 
@@ -102,10 +99,9 @@ class Notifications {
         foreach ($triggers as $key => $default_config) {
             if (isset($saved[$key]) && is_array($saved[$key])) {
                 $triggers[$key] = array_merge($default_config, [
-                    'enabled'              => !empty($saved[$key]['enabled']),
-                    'subject'              => isset($saved[$key]['subject']) ? (string) $saved[$key]['subject'] : $default_config['subject'],
-                    'body'                 => isset($saved[$key]['body']) ? (string) $saved[$key]['body'] : $default_config['body'],
-                    'sendgrid_template_id' => isset($saved[$key]['sendgrid_template_id']) ? (string) $saved[$key]['sendgrid_template_id'] : $default_config['sendgrid_template_id'],
+                    'enabled' => !empty($saved[$key]['enabled']),
+                    'subject' => isset($saved[$key]['subject']) ? (string) $saved[$key]['subject'] : $default_config['subject'],
+                    'body'    => isset($saved[$key]['body']) ? (string) $saved[$key]['body'] : $default_config['body'],
                 ]);
             }
         }
@@ -140,10 +136,9 @@ class Notifications {
             }
             $input = $templates_input[$key];
             $sanitized[$key] = [
-                'enabled'              => !empty($input['enabled']),
-                'subject'              => sanitize_text_field($input['subject'] ?? $config['subject']),
-                'body'                 => wp_kses_post($input['body'] ?? $config['body']),
-                'sendgrid_template_id' => sanitize_text_field($input['sendgrid_template_id'] ?? ''),
+                'enabled' => !empty($input['enabled']),
+                'subject' => sanitize_text_field($input['subject'] ?? $config['subject']),
+                'body'    => wp_kses_post($input['body'] ?? $config['body']),
             ];
         }
 
@@ -260,12 +255,11 @@ class Notifications {
         $html_body = self::interpolate($template['body'], $variables);
 
         $payload = [
-            'to_email'             => $recipient_email,
-            'to_name'              => sanitize_text_field($recipient_name),
-            'subject'              => $subject,
-            'html_body'            => $html_body,
-            'sendgrid_template_id' => trim((string) ($template['sendgrid_template_id'] ?? '')),
-            'variables'            => $variables,
+            'to_email'  => $recipient_email,
+            'to_name'   => sanitize_text_field($recipient_name),
+            'subject'   => $subject,
+            'html_body' => $html_body,
+            'variables' => $variables,
         ];
 
         $notification_id = self::create_notification_log(
@@ -300,7 +294,7 @@ class Notifications {
     }
 
     /**
-     * Attempt to send an email via Twilio SendGrid v3 API and record the result / schedule retry on failure.
+     * Attempt to send an email via Resend API and record the result / schedule retry on failure.
      *
      * @param int    $notification_id
      * @param string $trigger_key
@@ -310,7 +304,7 @@ class Notifications {
      */
     public static function attempt_delivery($notification_id, $trigger_key, array $payload, $current_attempts = 0) {
         $attempt = (int) $current_attempts + 1;
-        $result  = self::send_via_sendgrid($payload);
+        $result  = self::send_via_resend($payload);
 
         if ($result['success']) {
             self::update_notification_log($notification_id, [
@@ -324,7 +318,7 @@ class Notifications {
         }
 
         $max_attempts = (int) apply_filters('massinc_email_max_retries', self::MAX_ATTEMPTS);
-        $error_msg    = $result['error'] ?? 'Unknown SendGrid delivery error.';
+        $error_msg    = $result['error'] ?? 'Unknown Resend delivery error.';
 
         self::log_error(sprintf(
             'Email delivery failed [trigger=%s, to=%s, attempt=%d/%d]: %s',
@@ -406,63 +400,38 @@ class Notifications {
     }
 
     /**
-     * Send an email request through Twilio SendGrid v3 Mail Send API.
+     * Send an email request through the Resend Emails API.
      *
      * @param array $payload
-     * @return array{success: bool, error?: string, status_code?: int}
+     * @return array{success: bool, id?: string|null, error?: string, status_code?: int}
      */
-    public static function send_via_sendgrid(array $payload) {
+    public static function send_via_resend(array $payload) {
         $api_key = self::get_api_key();
         if (empty($api_key)) {
             return [
                 'success' => false,
-                'error'   => 'Missing SENDGRID_API_KEY environment variable.',
+                'error'   => 'Missing RESEND_API_KEY environment variable.',
             ];
         }
 
         $from_email = self::get_from_email();
         $from_name  = self::get_from_name();
         $to_email   = $payload['to_email'] ?? '';
-        $to_name    = $payload['to_name'] ?? '';
         $subject    = $payload['subject'] ?? '';
         $html_body  = $payload['html_body'] ?? '';
 
-        $to_entry = ['email' => $to_email];
-        if (!empty($to_name)) {
-            $to_entry['name'] = $to_name;
-        }
-
-        $personalization = [
-            'to' => [$to_entry],
-        ];
+        $from_header = !empty($from_name) ? sprintf('%s <%s>', $from_name, $from_email) : $from_email;
+        $plain_text  = wp_strip_all_tags($html_body);
 
         $body = [
-            'personalizations' => [$personalization],
-            'from'             => [
-                'email' => $from_email,
-                'name'  => $from_name,
-            ],
-            'subject'          => $subject,
+            'from'    => $from_header,
+            'to'      => [$to_email],
+            'subject' => $subject,
+            'html'    => $html_body ?: '<p>' . esc_html($subject) . '</p>',
+            'text'    => $plain_text ?: $subject,
         ];
 
-        if (!empty($payload['sendgrid_template_id'])) {
-            $body['template_id'] = $payload['sendgrid_template_id'];
-            $body['personalizations'][0]['dynamic_template_data'] = $payload['variables'] ?? [];
-        } else {
-            $plain_text = wp_strip_all_tags($html_body);
-            $body['content'] = [
-                [
-                    'type'  => 'text/plain',
-                    'value' => $plain_text ?: $subject,
-                ],
-                [
-                    'type'  => 'text/html',
-                    'value' => $html_body ?: '<p>' . esc_html($subject) . '</p>',
-                ],
-            ];
-        }
-
-        $response = wp_remote_post(self::SENDGRID_ENDPOINT, [
+        $response = wp_remote_post(self::RESEND_ENDPOINT, [
             'timeout' => 15,
             'headers' => [
                 'Authorization' => 'Bearer ' . $api_key,
@@ -480,20 +449,21 @@ class Notifications {
 
         $status_code   = (int) wp_remote_retrieve_response_code($response);
         $response_body = (string) wp_remote_retrieve_body($response);
+        $decoded       = !empty($response_body) ? json_decode($response_body, true) : null;
 
-        // SendGrid returns 202 Accepted on success
+        // Resend returns 200 OK with {"id": "..."} on success
         if ($status_code >= 200 && $status_code < 300) {
             return [
                 'success'     => true,
                 'status_code' => $status_code,
+                'id'          => is_array($decoded) ? ($decoded['id'] ?? null) : null,
             ];
         }
 
-        $error_detail = sprintf('SendGrid HTTP %d', $status_code);
+        $error_detail = sprintf('Resend HTTP %d', $status_code);
         if (!empty($response_body)) {
-            $decoded = json_decode($response_body, true);
-            if (isset($decoded['errors'][0]['message'])) {
-                $error_detail .= ': ' . $decoded['errors'][0]['message'];
+            if (is_array($decoded) && !empty($decoded['message'])) {
+                $error_detail .= ': ' . $decoded['message'];
             } else {
                 $error_detail .= ': ' . substr($response_body, 0, 300);
             }
@@ -589,12 +559,12 @@ class Notifications {
     }
 
     /**
-     * Resolve the SendGrid API key strictly from environment variables (never hardcoded).
+     * Resolve the Resend API key strictly from environment variables (never hardcoded).
      *
      * @return string
      */
     public static function get_api_key() {
-        return self::get_env('SENDGRID_API_KEY', '');
+        return self::get_env('RESEND_API_KEY', '');
     }
 
     /**
@@ -603,7 +573,7 @@ class Notifications {
      * @return string
      */
     public static function get_from_email() {
-        $env_from = self::get_env('SENDGRID_FROM_EMAIL', '');
+        $env_from = self::get_env('RESEND_FROM_EMAIL', '');
         if (!empty($env_from) && is_email($env_from)) {
             return $env_from;
         }
@@ -617,7 +587,7 @@ class Notifications {
      * @return string
      */
     public static function get_from_name() {
-        $env_name = self::get_env('SENDGRID_FROM_NAME', '');
+        $env_name = self::get_env('RESEND_FROM_NAME', '');
         if (!empty($env_name)) {
             return $env_name;
         }
