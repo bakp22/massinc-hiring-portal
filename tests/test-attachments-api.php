@@ -230,4 +230,44 @@ class Test_Attachments_API extends WP_UnitTestCase {
         $this->assertSame('', Attachments::path_for('../../wp-config.php'));
         $this->assertSame('', Attachments::path_for('resume.pdf'));
     }
+
+    public function test_past_applicant_reapplying_updates_past_files_with_new_files() {
+        $second_job_id = Job::create([
+            'title'           => 'Second Job',
+            'description'     => 'Another open job.',
+            'location'        => 'Boston, MA',
+            'employment_type' => 'full-time',
+            'status'          => 'open',
+        ]);
+
+        $first_response = $this->submit(
+            ['resume' => $this->upload('old_resume.pdf')],
+            ['sample_urls' => ['https://example.com/old-portfolio']]
+        );
+        $this->assertSame(201, $first_response->get_status());
+        $first_app_id = $first_response->get_data()['application_id'];
+
+        $old_attachments = Attachment::get_for_application($first_app_id);
+        $old_stored_path = Attachments::path_for($old_attachments[0]->get('stored_name'));
+        $this->assertFileExists($old_stored_path);
+
+        $second_response = $this->submit(
+            [
+                'resume'       => $this->upload('new_resume.pdf'),
+                'cover_letter' => $this->docx_upload('new_cover.docx'),
+            ],
+            [
+                'job_id'      => $second_job_id,
+                'sample_urls' => ['https://example.com/new-portfolio'],
+            ]
+        );
+        $this->assertSame(201, $second_response->get_status());
+
+        $updated_past_attachments = Attachment::get_for_application($first_app_id);
+        $this->assertCount(3, $updated_past_attachments);
+        $this->assertSame('new_resume.pdf', $updated_past_attachments[0]->get('original_name'));
+        $this->assertSame('new_cover.docx', $updated_past_attachments[1]->get('original_name'));
+        $this->assertSame('https://example.com/new-portfolio', $updated_past_attachments[2]->get('url'));
+        $this->assertFileDoesNotExist($old_stored_path, 'Superseded past file should be removed from disk.');
+    }
 }

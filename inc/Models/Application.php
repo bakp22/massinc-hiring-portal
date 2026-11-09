@@ -67,6 +67,30 @@ class Application extends Model {
     }
 
     /**
+     * Retrieve all application IDs belonging to a candidate.
+     *
+     * @param int $candidate_id
+     * @return int[]
+     */
+    public static function get_ids_for_candidate($candidate_id) {
+        global $wpdb;
+        $candidate_id = absint($candidate_id);
+        if (!$candidate_id) {
+            return [];
+        }
+
+        $table = $wpdb->prefix . 'massinc_applications';
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT id FROM {$table} WHERE candidate_id = %d ORDER BY id ASC",
+                $candidate_id
+            )
+        );
+
+        return array_map('intval', $ids ?: []);
+    }
+
+    /**
      * Insert application record into wp_massinc_applications mapping job_id and candidate_id.
      *
      * @param array $data

@@ -7,7 +7,7 @@ class Database {
     /**
      * Bump when create_tables() changes so existing installs pick it up.
      */
-    const SCHEMA_VERSION = '3';
+    const SCHEMA_VERSION = '4';
 
     /**
      * Run create_tables() on installs created before the current schema
@@ -57,10 +57,12 @@ class Database {
             last_name varchar(100) NOT NULL DEFAULT '',
             email varchar(255) NOT NULL DEFAULT '',
             phone varchar(50) NOT NULL DEFAULT '',
+            is_past_applicant tinyint(1) unsigned NOT NULL DEFAULT 0,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY email (email),
+            KEY full_name (first_name, last_name),
             KEY wp_user_id (wp_user_id)
         ) $charset_collate;
 

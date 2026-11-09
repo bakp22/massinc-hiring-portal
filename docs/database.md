@@ -28,9 +28,10 @@ Important fields:
 
 - `id`
 - optional `wp_user_id`
-- name
-- email
-- phone
+- name (`first_name`, `last_name`)
+- `email`
+- `phone`
+- `is_past_applicant` (flag set to `1` when a candidate has applied previously by email or name)
 - timestamps
 
 ## Applications
