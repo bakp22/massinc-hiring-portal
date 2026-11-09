@@ -12,6 +12,10 @@ class Candidate extends Model {
         return (string) $this->get('email', '');
     }
 
+    public function is_past_applicant() {
+        return (bool) $this->get('is_past_applicant', 0);
+    }
+
     /**
      * Retrieve a candidate by email address.
      *
@@ -35,6 +39,51 @@ class Candidate extends Model {
         );
 
         return $row ? new self($row) : null;
+    }
+
+    /**
+     * Retrieve a candidate by first and last name.
+     *
+     * @param string $first_name
+     * @param string $last_name
+     * @return Candidate|null
+     */
+    public static function get_by_name($first_name, $last_name) {
+        global $wpdb;
+        $first_name = sanitize_text_field($first_name);
+        $last_name  = sanitize_text_field($last_name);
+        if ($first_name === '' || $last_name === '') {
+            return null;
+        }
+
+        $table = $wpdb->prefix . 'massinc_candidates';
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE LOWER(first_name) = LOWER(%s) AND LOWER(last_name) = LOWER(%s) ORDER BY id DESC LIMIT 1",
+                $first_name,
+                $last_name
+            ),
+            ARRAY_A
+        );
+
+        return $row ? new self($row) : null;
+    }
+
+    /**
+     * Find an existing candidate by email or by full name (first_name + last_name).
+     *
+     * @param string $email
+     * @param string $first_name
+     * @param string $last_name
+     * @return Candidate|null
+     */
+    public static function find_existing($email, $first_name = '', $last_name = '') {
+        $candidate = self::get_by_email($email);
+        if ($candidate) {
+            return $candidate;
+        }
+
+        return self::get_by_name($first_name, $last_name);
     }
 
     /**
@@ -75,15 +124,16 @@ class Candidate extends Model {
         $now = current_time('mysql');
 
         $insert_data = [
-            'first_name' => sanitize_text_field($data['first_name'] ?? ''),
-            'last_name'  => sanitize_text_field($data['last_name'] ?? ''),
-            'email'      => sanitize_email($data['email'] ?? ''),
-            'phone'      => sanitize_text_field($data['phone'] ?? ''),
-            'created_at' => $data['created_at'] ?? $now,
-            'updated_at' => $data['updated_at'] ?? $now,
+            'first_name'        => sanitize_text_field($data['first_name'] ?? ''),
+            'last_name'         => sanitize_text_field($data['last_name'] ?? ''),
+            'email'             => sanitize_email($data['email'] ?? ''),
+            'phone'             => sanitize_text_field($data['phone'] ?? ''),
+            'is_past_applicant' => !empty($data['is_past_applicant']) ? 1 : 0,
+            'created_at'        => $data['created_at'] ?? $now,
+            'updated_at'        => $data['updated_at'] ?? $now,
         ];
 
-        $format = ['%s', '%s', '%s', '%s', '%s', '%s'];
+        $format = ['%s', '%s', '%s', '%s', '%d', '%s', '%s'];
 
         if (!empty($data['wp_user_id'])) {
             $insert_data['wp_user_id'] = absint($data['wp_user_id']);
@@ -100,9 +150,8 @@ class Candidate extends Model {
     }
 
     /**
-     * Update an existing candidate's name/phone in wp_massinc_candidates.
-     * Email is intentionally not updated here since it's the lookup key
-     * used to find this candidate in the first place.
+     * Update an existing candidate's information and optional past-applicant flag
+     * in wp_massinc_candidates.
      *
      * @param int $id
      * @param array $data
@@ -123,12 +172,26 @@ class Candidate extends Model {
             'phone'      => sanitize_text_field($data['phone'] ?? ''),
             'updated_at' => current_time('mysql'),
         ];
+        $format = ['%s', '%s', '%s', '%s'];
+
+        if (isset($data['email'])) {
+            $clean_email = sanitize_email($data['email']);
+            if ($clean_email !== '') {
+                $update_data['email'] = $clean_email;
+                $format[] = '%s';
+            }
+        }
+
+        if (array_key_exists('is_past_applicant', $data)) {
+            $update_data['is_past_applicant'] = !empty($data['is_past_applicant']) ? 1 : 0;
+            $format[] = '%d';
+        }
 
         $result = $wpdb->update(
             $table,
             $update_data,
             ['id' => $id],
-            ['%s', '%s', '%s', '%s'],
+            $format,
             ['%d']
         );
 

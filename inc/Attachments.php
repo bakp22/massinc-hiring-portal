@@ -1,6 +1,7 @@
 <?php
 namespace MassINC;
 
+use MassINC\Models\Application;
 use MassINC\Models\Attachment;
 
 defined('ABSPATH') || exit;
@@ -341,15 +342,73 @@ class Attachments {
     }
 
     /**
-     * Remove an application's stored files and attachment rows.
+     * Remove an application's stored files (if not shared by another application)
+     * and attachment rows.
      */
     public static function purge($application_id) {
+        global $wpdb;
+        $application_id = absint($application_id);
+        $table = $wpdb->prefix . 'massinc_application_attachments';
+
         foreach (Attachment::get_for_application($application_id) as $attachment) {
-            $path = self::path_for($attachment->get('stored_name'));
-            if ($path && file_exists($path)) {
-                unlink($path);
+            $stored_name = (string) $attachment->get('stored_name');
+            if ($stored_name === '') {
+                continue;
+            }
+
+            $other_refs = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table} WHERE stored_name = %s AND application_id != %d",
+                    $stored_name,
+                    $application_id
+                )
+            );
+
+            if ($other_refs === 0) {
+                $path = self::path_for($stored_name);
+                if ($path && file_exists($path)) {
+                    unlink($path);
+                }
             }
         }
         Attachment::delete_for_application($application_id);
+    }
+
+    /**
+     * Replace a returning candidate's past application files/links with the
+     * files/links from their latest application.
+     *
+     * @param int $candidate_id
+     * @param int $latest_application_id
+     */
+    public static function replace_past_for_candidate($candidate_id, $latest_application_id) {
+        $candidate_id          = absint($candidate_id);
+        $latest_application_id = absint($latest_application_id);
+        if (!$candidate_id || !$latest_application_id) {
+            return;
+        }
+
+        $latest_attachments = Attachment::get_for_application($latest_application_id);
+        $application_ids    = Application::get_ids_for_candidate($candidate_id);
+
+        foreach ($application_ids as $app_id) {
+            if ($app_id === $latest_application_id) {
+                continue;
+            }
+
+            self::purge($app_id);
+
+            foreach ($latest_attachments as $attachment) {
+                Attachment::create([
+                    'application_id' => $app_id,
+                    'kind'           => $attachment->get_kind(),
+                    'original_name'  => $attachment->get('original_name', ''),
+                    'stored_name'    => $attachment->get('stored_name', ''),
+                    'mime_type'      => $attachment->get('mime_type', ''),
+                    'size_bytes'     => $attachment->get('size_bytes', 0),
+                    'url'            => $attachment->is_link() ? $attachment->get('url') : null,
+                ]);
+            }
+        }
     }
 }

@@ -252,6 +252,7 @@ class Test_Applications_API extends WP_UnitTestCase {
             'job_id'          => $job_id_1,
         ]);
         $first_candidate = Candidate::get_by_email('reapply@example.com');
+        $this->assertFalse($first_candidate->is_past_applicant(), 'First-time applicant should not be flagged as a past applicant.');
 
         $response = $this->dispatch_application([
             'first_name'      => 'Janet',
@@ -271,6 +272,39 @@ class Test_Applications_API extends WP_UnitTestCase {
         $this->assertSame('Janet', $updated_candidate->get('first_name'));
         $this->assertSame('Doe-Smith', $updated_candidate->get('last_name'));
         $this->assertSame('9998887777', $updated_candidate->get('phone'));
+        $this->assertTrue($updated_candidate->is_past_applicant(), 'Reapplying with the same email should flag the candidate as a past applicant.');
+    }
+
+    public function test_reapplying_with_same_name_updates_existing_candidate_and_flags_past_applicant() {
+        $job_id_1 = $this->create_open_job(['title' => 'Job One']);
+        $job_id_2 = $this->create_open_job(['title' => 'Job Two']);
+
+        $this->dispatch_application([
+            'first_name'      => 'Alex',
+            'last_name'       => 'Rivera',
+            'applicant_email' => 'alex.old@example.com',
+            'phone'           => '111-222-3333',
+            'job_id'          => $job_id_1,
+        ]);
+        $first_candidate = Candidate::get_by_email('alex.old@example.com');
+        $this->assertFalse($first_candidate->is_past_applicant());
+
+        $response = $this->dispatch_application([
+            'first_name'      => 'alex',
+            'last_name'       => 'RIVERA',
+            'applicant_email' => 'alex.new@example.com',
+            'phone'           => '444-555-6666',
+            'job_id'          => $job_id_2,
+        ]);
+        $this->assertSame(201, $response->get_status());
+
+        $updated_candidate = Candidate::get_by_id($first_candidate->get_id());
+        $this->assertNotNull($updated_candidate);
+        $this->assertSame('Alex', $updated_candidate->get('first_name'));
+        $this->assertSame('Rivera', $updated_candidate->get('last_name'));
+        $this->assertSame('alex.new@example.com', $updated_candidate->get('email'), 'Past email should be updated with new email.');
+        $this->assertSame('4445556666', $updated_candidate->get('phone'), 'Past phone should be updated with new phone.');
+        $this->assertTrue($updated_candidate->is_past_applicant(), 'Reapplying with the same name should flag the candidate as a past applicant.');
     }
 
     public function test_applying_to_same_job_twice_returns_409() {
@@ -291,5 +325,6 @@ class Test_Applications_API extends WP_UnitTestCase {
 
         $candidate = Candidate::get_by_email('dupe@example.com');
         $this->assertSame('Jane', $candidate->get('first_name'), 'A rejected duplicate must not update the candidate.');
+        $this->assertFalse($candidate->is_past_applicant(), 'A rejected duplicate must not flag a first-time candidate as a past applicant.');
     }
 }
