@@ -29,6 +29,8 @@
     --color-bg-subtle: #f8f5f5;
     --color-bg-input: #fff;
     --color-bg-inverse: #0c1c35;
+    --color-bg-muted: #f3efef;
+    --color-purple-light: #ffe3f7;
     --color-border-default: #d0d0d0;
     --color-border-strong: #414042;
     --color-border-subtle: #e3dfdb;
@@ -116,11 +118,22 @@
     line-height: 24px;
 }
 
-.massinc-wordmark {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border: 1px dashed var(--color-border-default);
-    border-radius: var(--radius-sm);
-    font: 600 22px/30px var(--font-serif);
+.massinc-nav-logo {
+    display: block;
+    width: 207px;
+    height: 36px;
+    max-width: none;
+}
+
+.massinc-nav-user .massinc-icon {
+    color: var(--color-text-secondary);
+}
+
+.massinc-nav .massinc-link {
+    color: var(--color-text-link);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-position: from-font;
 }
 
 .massinc-nav-divider {
@@ -192,8 +205,17 @@
     color: var(--color-text-on-brand);
 }
 
+.massinc-btn-small {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+/* Disabled = not yet actionable (e.g. Submit rating before a name is picked). */
 .massinc-btn:disabled {
-    opacity: 0.6;
+    border-color: var(--color-border-default);
+    background: var(--color-bg-muted);
+    color: var(--color-text-secondary);
     cursor: not-allowed;
 }
 
@@ -292,6 +314,194 @@
     color: var(--color-text-secondary);
     opacity: 1;
 }
+
+.massinc-ats .massinc-input:disabled {
+    background: var(--color-bg-muted);
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+}
+
+.massinc-ats textarea.massinc-input {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Custom dropdown (src/shared/select.js, markup from minc_hiring_dropdown()). */
+.massinc-dd {
+    position: relative;
+}
+
+.massinc-ats .massinc-dd .massinc-dd-control {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-right: 44px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.massinc-ats button.massinc-dd-control {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.massinc-dd-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.massinc-dd.is-placeholder .massinc-dd-text {
+    color: var(--color-text-secondary);
+}
+
+.massinc-dd-caret {
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-md);
+    transform: translateY(-50%);
+    color: var(--color-text-secondary);
+    pointer-events: none;
+}
+
+.massinc-ats .massinc-dd .massinc-dd-control:disabled {
+    cursor: not-allowed;
+}
+
+.massinc-dd.is-busy {
+    cursor: progress;
+}
+
+.massinc-ats .massinc-dd-list {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    max-height: 280px;
+    margin: 0;
+    padding: var(--spacing-2xs) 0;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-input);
+    box-shadow: 0 8px 24px rgba(12, 28, 53, 0.14);
+}
+
+.massinc-dd-row {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.massinc-dd-option {
+    flex: 1;
+    min-width: 0;
+    padding: 10px var(--spacing-md);
+    color: var(--color-text-primary);
+    font: 400 16px/24px var(--font-sans);
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.massinc-dd-option.is-active {
+    background: var(--color-bg-subtle);
+}
+
+.massinc-dd-option.is-selected {
+    font-weight: 600;
+}
+
+.massinc-dd-option.is-disabled {
+    color: var(--color-text-secondary);
+    cursor: not-allowed;
+}
+
+.massinc-dd-add {
+    color: var(--color-text-link);
+    font-weight: 500;
+}
+
+.massinc-ats .massinc-dd-remove {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    margin-right: var(--spacing-xs);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-secondary);
+    font: 400 22px/1 var(--font-sans);
+    cursor: pointer;
+}
+
+.massinc-ats .massinc-dd-remove:hover,
+.massinc-ats .massinc-dd-remove:focus-visible {
+    background: var(--color-bg-muted);
+    color: var(--color-brand-default);
+}
+
+.massinc-dd-row.is-confirming {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--color-bg-subtle);
+}
+
+.massinc-dd-confirm-text {
+    flex: 1 1 100%;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.massinc-ats .massinc-dd-confirm {
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font: 600 13px/18px var(--font-sans);
+    cursor: pointer;
+}
+
+.massinc-ats .massinc-dd-confirm-yes {
+    border-color: var(--color-brand-default);
+    background: var(--color-brand-default);
+    color: var(--color-text-on-brand);
+}
+
+.massinc-dd-empty,
+.massinc-dd-error {
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-text-secondary);
+}
+
+.massinc-dd-error {
+    color: #b00020;
+    font-size: 13px;
+}
+
+/* Job / Internship tags */
+.massinc-type {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+}
+
+.massinc-type-job { background: var(--color-bg-muted); }
+.massinc-type-internship { background: var(--color-purple-light); }
 
 .massinc-field-label {
     display: block;

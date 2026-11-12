@@ -38,7 +38,7 @@ MASSINC_STAFF_NOTIFICATION_EMAIL=hiring@massinc.org,hr@massinc.org
 
 Email templates can be edited at any time without modifying PHP code via the WordPress Admin Template Editor:
 
-1. Log in to WordPress Admin with a user that has the `manage_minc_hiring` capability (Administrator or Hiring Manager).
+1. Log in to WordPress Admin with a user that has the `manage_minc_hiring` capability (Administrators).
 2. Navigate to **Hiring → Email Notifications**.
 3. For each trigger, you can:
    - Enable or disable the notification.

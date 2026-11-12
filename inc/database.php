@@ -7,7 +7,7 @@ class Database {
     /**
      * Bump when create_tables() changes so existing installs pick it up.
      */
-    const SCHEMA_VERSION = '4';
+    const SCHEMA_VERSION = '5';
 
     /**
      * Run create_tables() on installs created before the current schema
@@ -32,6 +32,8 @@ class Database {
         $applications_table  = $wpdb->prefix . 'massinc_applications';
         $attachments_table   = $wpdb->prefix . 'massinc_application_attachments';
         $notifications_table = $wpdb->prefix . 'massinc_notifications';
+        $ratings_table       = $wpdb->prefix . 'massinc_ratings';
+        $notes_table         = $wpdb->prefix . 'massinc_notes';
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -118,6 +120,27 @@ class Database {
             KEY application_id (application_id),
             KEY status (status),
             KEY next_retry_at (next_retry_at)
+        ) $charset_collate;
+
+        CREATE TABLE $ratings_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            application_id bigint(20) unsigned NOT NULL,
+            reviewer_name varchar(100) NOT NULL DEFAULT '',
+            score tinyint(3) unsigned NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY application_reviewer (application_id,reviewer_name)
+        ) $charset_collate;
+
+        CREATE TABLE $notes_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            application_id bigint(20) unsigned NOT NULL,
+            author_name varchar(100) NOT NULL DEFAULT '',
+            body text NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY application_id (application_id)
         ) $charset_collate;";
 
         dbDelta($sql);

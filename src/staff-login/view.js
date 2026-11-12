@@ -20,7 +20,8 @@
 
         var summary = form.querySelector('.massinc-form-error-summary');
         var submit = form.querySelector('.massinc-submit');
-        var emailField = form.querySelector('[data-field="email"]');
+        var isAdmin = form.getAttribute('data-login-type') === 'admin';
+        var emailField = form.querySelector('[data-field="login"]');
         var passwordField = form.querySelector('[data-field="password"]');
         var emailInput = emailField.querySelector('input');
         var passwordInput = passwordField.querySelector('input');
@@ -40,11 +41,15 @@
         function validate() {
             var firstInvalid = null;
 
+            // Staff sign in with the shared username; admins with their own email.
             var email = emailInput.value.trim();
             if (!email) {
-                setFieldError(emailField, 'Please enter your email address.');
+                setFieldError(
+                    emailField,
+                    isAdmin ? 'Please enter your email address.' : 'Please enter the staff username.'
+                );
                 firstInvalid = firstInvalid || emailInput;
-            } else if (!EMAIL_PATTERN.test(email)) {
+            } else if (isAdmin && !EMAIL_PATTERN.test(email)) {
                 setFieldError(
                     emailField,
                     'Please enter a valid email address, like name@massinc.org.'

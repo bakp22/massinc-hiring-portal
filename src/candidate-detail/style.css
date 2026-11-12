@@ -59,6 +59,13 @@
     white-space: pre-wrap;
 }
 
+.massinc-detail-contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
 /* Layout */
 .massinc-detail-columns {
     display: flex;
@@ -168,7 +175,8 @@
     line-height: 20px;
 }
 
-.massinc-your-rating {
+/* Reviewer and Your rating rows */
+.massinc-rating-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -178,21 +186,24 @@
     background: var(--color-bg-subtle);
 }
 
-.massinc-your-rating .massinc-row-label {
-    width: 110px;
+.massinc-rating-control {
+    flex: none;
+    width: 280px;
+    max-width: 100%;
 }
 
-.massinc-star-input {
-    display: inline-flex;
-    gap: 2px;
+/* After rating, the name is fixed but should still read as a normal field (as in the design). */
+.massinc-detail[data-state='after'] [data-dd='reviewer'].is-disabled .massinc-dd-control {
+    background: var(--color-bg-input);
+    color: var(--color-text-primary);
+    cursor: default;
 }
 
-.massinc-ats .massinc-star-button {
-    padding: 0;
-    border: 0;
-    background: none;
-    line-height: 0;
-    cursor: pointer;
+.massinc-ats .massinc-field-error {
+    width: 100%;
+    font-size: 13px;
+    line-height: 18px;
+    color: #b00020;
 }
 
 .massinc-ratings-hidden {
@@ -271,10 +282,23 @@
 }
 
 /* Notes */
+.massinc-notes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
 .massinc-note {
     display: flex;
     align-items: flex-start;
     gap: var(--spacing-sm);
+}
+
+.massinc-note-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
 }
 
 .massinc-note-info {
@@ -295,6 +319,43 @@
 .massinc-note-text {
     font-size: 14px;
     line-height: 22px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Links */
+.massinc-ats .massinc-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.massinc-link-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.massinc-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--color-text-secondary);
+}
+
+.massinc-ats .massinc-link {
+    min-width: 0;
+    color: var(--color-text-link);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    text-decoration: underline;
+    text-underline-position: from-font;
+    overflow-wrap: anywhere;
 }
 
 /* Sidebar */
@@ -304,23 +365,10 @@
     gap: 10px;
 }
 
-.massinc-select {
-    position: relative;
-}
-
-.massinc-select::after {
-    content: '\25BE';
-    position: absolute;
-    top: 50%;
-    right: var(--spacing-md);
-    transform: translateY(-50%);
+.massinc-note-small {
+    font-size: 13px;
+    line-height: 18px;
     color: var(--color-text-secondary);
-    pointer-events: none;
-}
-
-.massinc-ats .massinc-select select {
-    appearance: none;
-    -webkit-appearance: none;
 }
 
 @media (max-width: 1100px) {
