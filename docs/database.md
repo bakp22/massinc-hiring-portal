@@ -68,6 +68,36 @@ closed to direct requests. Staff download them through
 `GET /massinc/v1/attachments/{id}/download`, which requires the
 `view_minc_applications` capability.
 
+## Ratings
+
+`wp_massinc_ratings`
+
+One staff rating (1 to 5) per reviewer per application. Staff share one sign-in, so the reviewer is a name picked on the page, stored as plain text in `reviewer_name`. It is not tied to the staff-name list, so removing a name from that list never changes past ratings.
+
+A reviewer rating the same application again replaces their earlier score (the old row is updated, not kept): `application_id` + `reviewer_name` is unique, and the match ignores case.
+
+Important fields:
+
+- `id`
+- `application_id`
+- `reviewer_name`
+- `score`
+- timestamps (`updated_at` is when the score last changed)
+
+## Notes
+
+`wp_massinc_notes`
+
+Free-text staff notes on an application. Append-only for now: there is no edit or delete. The author is a name picked on the page, stored as plain text in `author_name`, for the same reason as ratings.
+
+Important fields:
+
+- `id`
+- `application_id`
+- `author_name`
+- `body`
+- `created_at`
+
 ## Relationship
 
 ```text

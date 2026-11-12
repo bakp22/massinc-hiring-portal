@@ -1,0 +1,25 @@
+{
+  "apiVersion": 3,
+  "name": "minc-hiring/candidate-dashboard",
+  "title": "Hiring Candidate Dashboard",
+  "description": "Staff-only table of candidates with search, stage and rating filters.",
+  "category": "widgets",
+  "attributes": {
+    "detailUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "align": {
+      "type": "string",
+      "default": "full"
+    }
+  },
+  "supports": {
+    "align": ["wide", "full"]
+  },
+  "textdomain": "minc-hiring",
+  "editorScript": "file:./index.js",
+  "style": ["minc-hiring-ats-admin", "file:./style.css"],
+  "viewScript": "file:./view.js",
+  "render": "file:./render.php"
+}
