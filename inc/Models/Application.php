@@ -4,6 +4,52 @@ namespace MassINC\Models;
 defined('ABSPATH') || exit;
 
 class Application extends Model {
+    /**
+     * The hiring stages staff see, and the status each one is stored as.
+     * (Reading goes the other way, see minc_hiring_stage_for_status(), where
+     * the older "hired" status also shows as Offer.)
+     */
+    const STAGE_STATUSES = [
+        'applied'   => 'submitted',
+        'reviewing' => 'screening',
+        'interview' => 'interview',
+        'offer'     => 'offer',
+        'rejected'  => 'rejected',
+    ];
+
+    /**
+     * @param string $stage One of the keys of STAGE_STATUSES.
+     * @return string|null The status to store, or null for an unknown stage.
+     */
+    public static function status_for_stage($stage) {
+        return self::STAGE_STATUSES[$stage] ?? null;
+    }
+
+    /**
+     * Change an application's status.
+     *
+     * @param int    $id
+     * @param string $status
+     * @return bool Whether the update ran (true even if the status was already that).
+     */
+    public static function update_status($id, $status) {
+        global $wpdb;
+        $id = absint($id);
+        if (!$id || !in_array($status, self::STAGE_STATUSES, true)) {
+            return false;
+        }
+
+        $result = $wpdb->update(
+            $wpdb->prefix . 'massinc_applications',
+            ['status' => $status, 'updated_at' => current_time('mysql')],
+            ['id' => $id],
+            ['%s', '%s'],
+            ['%d']
+        );
+
+        return $result !== false;
+    }
+
     public function get_status() {
         return (string) $this->get('status', 'submitted');
     }

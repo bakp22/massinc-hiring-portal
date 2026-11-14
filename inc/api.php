@@ -5,6 +5,8 @@ use MassINC\Models\Application;
 use MassINC\Models\Attachment;
 use MassINC\Models\Candidate;
 use MassINC\Models\Job;
+use MassINC\Models\Note;
+use MassINC\Models\Rating;
 
 defined('ABSPATH') || exit;
 
@@ -14,6 +16,81 @@ class API {
             'methods'  => \WP_REST_Server::READABLE,
             'callback' => [self::class, 'get_jobs'],
             'permission_callback' => '__return_true',
+        ]);
+
+        register_rest_route('massinc/v1', '/staff-names', [
+            [
+                'methods'  => \WP_REST_Server::CREATABLE,
+                'callback' => [self::class, 'add_staff_name'],
+                'permission_callback' => [self::class, 'can_edit_staff_names'],
+                'args' => [
+                    'name' => [
+                        'type'     => 'string',
+                        'required' => true,
+                    ],
+                ],
+            ],
+            [
+                'methods'  => \WP_REST_Server::DELETABLE,
+                'callback' => [self::class, 'remove_staff_name'],
+                'permission_callback' => [self::class, 'can_edit_staff_names'],
+                'args' => [
+                    'name' => [
+                        'type'     => 'string',
+                        'required' => true,
+                    ],
+                ],
+            ],
+        ]);
+
+        register_rest_route('massinc/v1', '/applications/(?P<id>\d+)/ratings', [
+            'methods'  => \WP_REST_Server::CREATABLE,
+            'callback' => [self::class, 'save_rating'],
+            'permission_callback' => [self::class, 'can_review_applications'],
+            'args' => [
+                'reviewer' => [
+                    'type'     => 'string',
+                    'required' => true,
+                ],
+                'score' => [
+                    'type'              => 'integer',
+                    'required'          => true,
+                    'validate_callback' => function ($value) {
+                        return is_numeric($value)
+                            && (int) $value == $value
+                            && (int) $value >= Rating::MIN_SCORE
+                            && (int) $value <= Rating::MAX_SCORE;
+                    },
+                ],
+            ],
+        ]);
+
+        register_rest_route('massinc/v1', '/applications/(?P<id>\d+)/stage', [
+            'methods'  => \WP_REST_Server::CREATABLE,
+            'callback' => [self::class, 'change_stage'],
+            'permission_callback' => [self::class, 'can_change_stage'],
+            'args' => [
+                'stage' => [
+                    'type'     => 'string',
+                    'required' => true,
+                ],
+            ],
+        ]);
+
+        register_rest_route('massinc/v1', '/applications/(?P<id>\d+)/notes', [
+            'methods'  => \WP_REST_Server::CREATABLE,
+            'callback' => [self::class, 'add_note'],
+            'permission_callback' => [self::class, 'can_review_applications'],
+            'args' => [
+                'author' => [
+                    'type'     => 'string',
+                    'required' => true,
+                ],
+                'text' => [
+                    'type'     => 'string',
+                    'required' => true,
+                ],
+            ],
         ]);
 
         register_rest_route('massinc/v1', '/attachments/(?P<id>\d+)/download', [
@@ -177,6 +254,171 @@ class API {
             'status'         => 'submitted',
             'application_id' => $application_id,
         ], 201);
+    }
+
+    /**
+     * POST /massinc/v1/staff-names: add a name to the "Select your name" list.
+     * Returns 201 for a new name, 200 if it was already listed.
+     */
+    public static function add_staff_name(\WP_REST_Request $request) {
+        $result = StaffNames::add($request->get_param('name'));
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return new \WP_REST_Response($result, $result['created'] ? 201 : 200);
+    }
+
+    /**
+     * DELETE /massinc/v1/staff-names?name=...: take a name off the list. Only
+     * the list changes; ratings and notes already written under the name stay.
+     */
+    public static function remove_staff_name(\WP_REST_Request $request) {
+        return new \WP_REST_Response(StaffNames::remove($request->get_param('name')), 200);
+    }
+
+    /**
+     * POST /massinc/v1/applications/{id}/ratings: rate an application as a
+     * reviewer. Rating again as the same reviewer replaces their earlier score
+     * (200); a first rating is created (201).
+     */
+    public static function save_rating(\WP_REST_Request $request) {
+        $application = Application::get_by_id($request['id']);
+        if (!$application) {
+            return new \WP_Error('massinc_application_not_found', 'Application not found.', ['status' => 404]);
+        }
+
+        $reviewer = self::staff_name($request->get_param('reviewer'), 'Select your name first.');
+        if (is_wp_error($reviewer)) {
+            return $reviewer;
+        }
+
+        $result = Rating::save($application->get_id(), $reviewer, $request->get_param('score'));
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return new \WP_REST_Response([
+            'reviewer' => $result['reviewer'],
+            'score'    => $result['score'],
+            'created'  => $result['created'],
+            'date'     => mysql2date('j M Y', $result['updated_at']),
+        ], $result['created'] ? 201 : 200);
+    }
+
+    /**
+     * POST /massinc/v1/applications/{id}/stage: move an application to a
+     * hiring stage. Administrators only.
+     */
+    public static function change_stage(\WP_REST_Request $request) {
+        $application = Application::get_by_id($request['id']);
+        if (!$application) {
+            return new \WP_Error('massinc_application_not_found', 'Application not found.', ['status' => 404]);
+        }
+
+        $stage = sanitize_key((string) $request->get_param('stage'));
+        $status = Application::status_for_stage($stage);
+        if ($status === null) {
+            return new \WP_Error('massinc_invalid_stage', 'Choose a stage from the list.', ['status' => 400]);
+        }
+
+        if (!Application::update_status($application->get_id(), $status)) {
+            return new \WP_Error('massinc_stage_failed', 'Could not change the stage. Please try again.', ['status' => 500]);
+        }
+
+        return new \WP_REST_Response(['stage' => $stage, 'status' => $status], 200);
+    }
+
+    public static function can_change_stage() {
+        if (current_user_can('edit_minc_applications')) {
+            return true;
+        }
+        return new \WP_Error(
+            'rest_forbidden',
+            'Only admins can change stages.',
+            ['status' => is_user_logged_in() ? 403 : 401]
+        );
+    }
+
+    /**
+     * POST /massinc/v1/applications/{id}/notes: add a note. Notes are
+     * append-only: there is no route to edit or delete one yet.
+     */
+    public static function add_note(\WP_REST_Request $request) {
+        $application = Application::get_by_id($request['id']);
+        if (!$application) {
+            return new \WP_Error('massinc_application_not_found', 'Application not found.', ['status' => 404]);
+        }
+
+        $author = self::staff_name($request->get_param('author'), 'Select your name first.');
+        if (is_wp_error($author)) {
+            return $author;
+        }
+
+        $text = trim(sanitize_textarea_field((string) $request->get_param('text')));
+        if ($text === '') {
+            return new \WP_Error('massinc_note_required', 'Write a note first.', ['status' => 400]);
+        }
+        if (mb_strlen($text) > Note::MAX_LENGTH) {
+            return new \WP_Error(
+                'massinc_note_too_long',
+                sprintf('Notes can be up to %d characters.', Note::MAX_LENGTH),
+                ['status' => 400]
+            );
+        }
+
+        $note = Note::create($application->get_id(), $author, $text);
+        if (is_wp_error($note)) {
+            return $note;
+        }
+
+        return new \WP_REST_Response([
+            'id'     => $note['id'],
+            'author' => $note['author'],
+            'text'   => $note['body'],
+            'date'   => mysql2date('j M Y', $note['created_at']),
+        ], 201);
+    }
+
+    /**
+     * A reviewer or note-author name from the page: cleaned, spelled as on the
+     * staff list when listed, and 100 characters at most.
+     */
+    private static function staff_name($raw, $blank_message) {
+        $name = StaffNames::canonical($raw);
+        if ($name === '') {
+            return new \WP_Error('massinc_name_required', $blank_message, ['status' => 400]);
+        }
+        if (mb_strlen($name) > StaffNames::MAX_LENGTH) {
+            return new \WP_Error(
+                'massinc_name_too_long',
+                sprintf('Names can be up to %d characters.', StaffNames::MAX_LENGTH),
+                ['status' => 400]
+            );
+        }
+        return $name;
+    }
+
+    public static function can_review_applications() {
+        if (current_user_can('view_minc_applications')) {
+            return true;
+        }
+        return new \WP_Error(
+            'rest_forbidden',
+            'You are not allowed to rate applications or add notes.',
+            ['status' => is_user_logged_in() ? 403 : 401]
+        );
+    }
+
+    public static function can_edit_staff_names() {
+        if (current_user_can('view_minc_applications')) {
+            return true;
+        }
+        return new \WP_Error(
+            'rest_forbidden',
+            'You are not allowed to change the staff list.',
+            ['status' => is_user_logged_in() ? 403 : 401]
+        );
     }
 
     public static function can_view_applications() {

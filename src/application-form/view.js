@@ -292,6 +292,8 @@
         function showSummary() {
             summary.hidden = false;
             summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         function setConfirm(name, text) {
             success
                 .querySelectorAll('[data-confirm="' + name + '"]')

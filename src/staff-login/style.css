@@ -28,6 +28,7 @@
     --color-border-subtle: #e3dfdb;
     --color-bg-input: #fff;
     --color-bg-subtle: #f8f5f5;
+    --color-bg-muted: #f3efef;
     --color-error: #b00020;
     --spacing-xs: 8px;
     --spacing-sm: 12px;
@@ -70,45 +71,78 @@
     box-sizing: border-box;
     width: 100%;
     max-width: 440px;
-    padding: 40px;
+    padding: var(--spacing-xl);
     border: var(--border-width-default) solid var(--color-border-subtle);
     border-radius: var(--radius-md);
     background: var(--color-bg-input);
-    box-shadow: 0 4px 16px rgba(12, 28, 53, 0.06);
+    box-shadow: 0 4px 12px rgba(12, 28, 53, 0.06), 0 1px 2px rgba(12, 28, 53, 0.06);
 }
 
 .massinc-login-logo {
+    display: block;
     align-self: flex-start;
-    padding: var(--spacing-xs) var(--spacing-md);
-    border: var(--border-width-default) dashed var(--color-border-default);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-serif);
-    font-size: 20px;
-    font-weight: 600;
-    line-height: 24px;
-    letter-spacing: -0.2px;
-    color: var(--color-text-primary);
+    width: 276px;
+    max-width: 100%;
+    height: auto;
 }
 
 .massinc-login-header {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 6px;
 }
 
 .massinc-staff-login-block .massinc-login-title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 600;
-    line-height: 40px;
-    letter-spacing: -0.4px;
+    line-height: 36px;
+    letter-spacing: -0.2px;
     color: var(--color-text-primary);
 }
 
 .massinc-login-subtitle {
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--color-text-secondary);
+}
+
+/* Staff / Admin switch */
+.massinc-login-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-muted);
+}
+
+.massinc-staff-login-block .massinc-login-tab {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: 6px;
+    color: var(--color-text-secondary);
+    font: 500 16px/24px var(--font-sans);
+    text-decoration: none;
+}
+
+.massinc-staff-login-block .massinc-login-tab.is-active {
+    background: var(--color-bg-input);
+    color: var(--color-text-primary);
+    font: 600 14px/20px var(--font-sans);
+}
+
+.massinc-staff-login-block .massinc-login-tab:focus-visible {
+    outline: 3px solid var(--color-text-link);
+    outline-offset: 2px;
+}
+
+.massinc-staff-login-block .massinc-field-hint {
+    font-size: 13px;
+    line-height: 18px;
     color: var(--color-text-secondary);
 }
 
