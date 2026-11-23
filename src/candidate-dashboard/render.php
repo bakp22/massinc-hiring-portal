@@ -27,7 +27,7 @@ sort($positions, SORT_NATURAL | SORT_FLAG_CASE);
 ?>
 
 <div <?php echo $wrapper_attributes; ?>>
-    <?php minc_hiring_admin_nav(); ?>
+    <?php minc_hiring_admin_nav(true); ?>
 
     <div class="massinc-dashboard-body">
         <div class="massinc-dashboard-header">

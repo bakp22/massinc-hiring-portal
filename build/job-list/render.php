@@ -2,7 +2,7 @@
 defined('ABSPATH') || exit;
 
 global $wpdb;
-$table = $wpdb->prefix . 'minc_jobs';
+$table = $wpdb->prefix . 'massinc_jobs';
 
 $jobs = $wpdb->get_results(
     $wpdb->prepare(

@@ -1,16 +1,27 @@
 {
-  "name": "massinc-hiring-portal",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Development tooling for the MassINC Hiring Portal WordPress plugin.",
-  "scripts": {
-    "lint:js": "wp-scripts lint-js",
-    "format": "wp-scripts format",
-    "format:check": "wp-scripts format --check",
-    "build": "wp-scripts build",
-    "start": "wp-scripts start"
-  },
-  "devDependencies": {
-    "@wordpress/scripts": "^30.0.0"
-  }
+	"name": "massinc-hiring-portal",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Development tooling for the MassINC Hiring Portal WordPress plugin.",
+	"scripts": {
+		"lint:js": "wp-scripts lint-js",
+		"format": "wp-scripts format",
+		"format:check": "wp-scripts format --check",
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/massinc-hiring-portal vendor/bin/phpunit",
+		"test:notifications": "wp-env run tests-cli --env-cwd=wp-content/plugins/massinc-hiring-portal php tests/standalone/notifications.php",
+		"test": "npm run test:php && npm run test:notifications"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^12.1.0",
+		"@wordpress/scripts": "^30.0.0"
+	},
+	"overrides": {
+		"@wordpress/scripts": {
+			"@wordpress/env": "$@wordpress/env"
+		}
+	}
 }

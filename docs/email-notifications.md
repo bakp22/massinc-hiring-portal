@@ -117,18 +117,18 @@ add_action('massinc_application_status_changed', function ($application_id, $new
 
 ## 5. Testing Without `wp-env`
 
-You can run the standalone test suite in [`tests/test-notifications-standalone.php`](../tests/test-notifications-standalone.php) without starting `wp-env` or MySQL:
+You can run the standalone test suite in [`tests/standalone/notifications.php`](../tests/standalone/notifications.php) without starting `wp-env` or MySQL:
 
 ### Automated Mock Suite (No Resend API Key Required)
 ```bash
-php tests/test-notifications-standalone.php
+php tests/standalone/notifications.php
 # Or via Docker:
-docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/test-notifications-standalone.php
+docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/standalone/notifications.php
 ```
 
 ### Live Resend Delivery Test
 Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in `.env`, then pass `--live` and `--to`:
 ```bash
-php tests/test-notifications-standalone.php --live --to=your-email@example.com
+php tests/standalone/notifications.php --live --to=your-email@example.com
 ```
 

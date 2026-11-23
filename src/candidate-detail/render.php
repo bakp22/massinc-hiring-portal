@@ -3,16 +3,17 @@
  * Frontend render template for Candidate Detail block.
  *
  * Staff share one sign-in, so a reviewer first picks their own name from the
- * staff list, then chooses a rating. view.js switches data-state on the wrapper:
- *  - "before": the picked name hasn't rated this candidate. Everyone's scores
- *    and the average stay hidden so nobody anchors on someone else's score.
- *    Your rating and Submit stay disabled until a name is picked.
- *  - "after": the picked name has rated, so the average and each reviewer's
- *    rating are shown, and their own rating can be changed (it replaces the
- *    earlier one).
+ * staff list, then chooses a rating. Every reviewer's rating and the average
+ * are visible to everyone from the start. view.js switches data-state on the
+ * wrapper only for the rating form:
+ *  - "before": the picked name hasn't rated this candidate. Your rating and
+ *    Submit stay disabled until a name is picked.
+ *  - "after": the picked name has rated; picking another score replaces the
+ *    earlier one.
  * Ratings and notes are saved through the REST API (see inc/api.php) and read
- * back from the database on every load. The hiding is only on the page: the
- * ratings are in the page data so the page can show them without another request.
+ * back from the database on every load.
+ * Staff can rate, add notes and add their own name to the list. Changing a
+ * stage and removing a name from the list are admin-only ($is_admin).
  * ?demo=1 uses the hi-fi's sample data and saves nothing; add ?preview=rated to
  * start as a reviewer who has already rated.
  */
@@ -121,7 +122,7 @@ foreach ($stages as $key => $label) {
             <div class="massinc-detail-identity">
                 <h1 class="massinc-detail-name"><?php echo esc_html($candidate['name']); ?></h1>
                 <?php echo minc_hiring_stage_badge($candidate['stage']); ?>
-                <span class="massinc-rating massinc-state-after" data-avg-header></span>
+                <span class="massinc-rating" data-avg-header></span>
             </div>
             <p class="massinc-detail-meta"><?php echo esc_html(implode('  ·  ', $meta)); ?></p>
             <?php if ($candidate['email'] || $other_contact) : ?>
@@ -162,7 +163,7 @@ foreach ($stages as $key => $label) {
                 <section class="massinc-card" aria-labelledby="massinc-ratings-title">
                     <h2 class="massinc-card-title" id="massinc-ratings-title">Ratings</h2>
 
-                    <div class="massinc-overall massinc-state-after">
+                    <div class="massinc-overall" data-overall-row<?php echo $total_ratings ? '' : ' hidden'; ?>>
                         <span class="massinc-row-label">Overall</span>
                         <span class="massinc-rating" data-avg-overall></span>
                     </div>
@@ -176,7 +177,7 @@ foreach ($stages as $key => $label) {
                             'options'     => $name_options,
                             'value'       => $initial_reviewer,
                             'placeholder' => 'Select your name',
-                            'removable'   => true,
+                            'removable'   => $is_admin,
                             'class'       => 'massinc-rating-control',
                         ]); ?>
                     </div>
@@ -198,23 +199,15 @@ foreach ($stages as $key => $label) {
                         <p class="massinc-field-error" data-rating-error role="alert" hidden></p>
                     </div>
 
-                    <?php /* view.js rewrites this box as ratings come in. */ ?>
-                    <div class="massinc-ratings-hidden massinc-state-before">
-                        <?php if ($total_ratings) : ?>
-                            <p class="massinc-ratings-hidden-title" data-hidden-title>
-                                <?php echo esc_html(sprintf(_n('%1$d reviewer has already rated %2$s', '%1$d reviewers have already rated %2$s', $total_ratings, 'minc-hiring'), $total_ratings, $first_name)); ?>
-                            </p>
-                            <p class="massinc-muted" data-hidden-body>Their scores and the overall average stay hidden until you pick your name and submit a rating, so nobody anchors on someone else&rsquo;s score.</p>
-                        <?php else : ?>
-                            <p class="massinc-ratings-hidden-title" data-hidden-title>No one has rated <?php echo esc_html($first_name); ?> yet</p>
-                            <p class="massinc-muted" data-hidden-body>Pick your name and submit a rating to be the first.</p>
-                        <?php endif; ?>
+                    <?php /* Everyone's ratings are shown to every reviewer, before and after they rate. */ ?>
+                    <div class="massinc-ratings-hidden" data-no-ratings<?php echo $total_ratings ? ' hidden' : ''; ?>>
+                        <p class="massinc-ratings-hidden-title">No one has rated <?php echo esc_html($first_name); ?> yet</p>
+                        <p class="massinc-muted">Pick your name and submit a rating to be the first.</p>
                     </div>
 
-                    <div class="massinc-ratings-visible massinc-state-after">
+                    <div class="massinc-ratings-visible" data-ratings-list<?php echo $total_ratings ? '' : ' hidden'; ?>>
                         <hr class="massinc-divider">
                         <div data-reviews></div>
-                        <p class="massinc-muted massinc-visibility-note">Individual ratings are visible because <span data-viewer-name></span> has submitted a rating. Reviewers who have not rated yet see only their own row.</p>
                     </div>
                 </section>
 
@@ -244,7 +237,7 @@ foreach ($stages as $key => $label) {
                                 'mode'        => 'names',
                                 'options'     => $name_options,
                                 'placeholder' => 'Select your name',
-                                'removable'   => true,
+                                'removable'   => $is_admin,
                                 'class'       => 'massinc-rating-control',
                             ]); ?>
                         </div>

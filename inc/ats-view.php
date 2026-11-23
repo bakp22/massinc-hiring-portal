@@ -79,13 +79,89 @@ function minc_hiring_find_page_url($block_name, $fallback = '') {
     return $url ?: $fallback;
 }
 
-add_action('save_post_page', function () {
-    delete_transient('minc_hiring_page_' . md5('minc-hiring/candidate-dashboard'));
-    delete_transient('minc_hiring_page_' . md5('minc-hiring/candidate-detail'));
-});
+/**
+ * Every block whose page other pages link to.
+ */
+function minc_hiring_portal_blocks() {
+    return [
+        'minc-hiring/job-list',
+        'minc-hiring/application-form',
+        'minc-hiring/staff-login',
+        'minc-hiring/candidate-dashboard',
+        'minc-hiring/candidate-detail',
+        'minc-hiring/email-settings',
+    ];
+}
+
+/**
+ * Links in the staff header, in order. Admins also get Jobs and Settings.
+ * Jobs goes to the page with the Job List block; Settings to the page with
+ * the minc-hiring/email-settings block once it exists. Each falls back to the
+ * matching wp-admin screen when the site has no such page.
+ *
+ * @param string $current Key of the section being viewed.
+ * @return array[] Each: key, label, url, current.
+ */
+function minc_hiring_nav_items($current = 'candidates') {
+    $items = [
+        ['key' => 'candidates', 'label' => 'Candidates', 'url' => minc_hiring_dashboard_url()],
+    ];
+
+    if (minc_hiring_can_manage()) {
+        $items[] = [
+            'key'   => 'jobs',
+            'label' => 'Jobs',
+            'url'   => minc_hiring_find_page_url('minc-hiring/job-list', admin_url('admin.php?page=minc-hiring')),
+        ];
+        $items[] = [
+            'key'   => 'settings',
+            'label' => 'Settings',
+            'url'   => minc_hiring_find_page_url('minc-hiring/email-settings', admin_url('admin.php?page=minc-hiring-emails')),
+        ];
+    }
+
+    foreach ($items as &$item) {
+        $item['current'] = $item['key'] === $current;
+    }
+    return $items;
+}
+
+/**
+ * Forget every remembered page URL, so publishing, moving, renaming or
+ * deleting a page updates the portal's links straight away.
+ */
+function minc_hiring_forget_page_urls($post_id = 0) {
+    if ($post_id && get_post_type($post_id) !== 'page') {
+        return;
+    }
+    foreach (minc_hiring_portal_blocks() as $block_name) {
+        delete_transient('minc_hiring_page_' . md5($block_name));
+    }
+}
+add_action('save_post_page', 'minc_hiring_forget_page_urls');
+add_action('trashed_post', 'minc_hiring_forget_page_urls');
+add_action('untrashed_post', 'minc_hiring_forget_page_urls');
+add_action('deleted_post', 'minc_hiring_forget_page_urls');
 
 function minc_hiring_dashboard_url() {
     return minc_hiring_find_page_url('minc-hiring/candidate-dashboard', home_url('/'));
+}
+
+/**
+ * Where an applicant applies for a job: the page holding the application
+ * form, or the current page when the list and the form share a page.
+ */
+function minc_hiring_apply_url($job_id) {
+    $form_page = minc_hiring_find_page_url('minc-hiring/application-form', get_permalink());
+    return add_query_arg('job_id', (int) $job_id, $form_page);
+}
+
+/**
+ * The page listing open jobs, for the form's "All positions" link. Falls back
+ * to the current page without a job selected.
+ */
+function minc_hiring_jobs_url() {
+    return minc_hiring_find_page_url('minc-hiring/job-list', remove_query_arg('job_id', get_permalink()));
 }
 
 function minc_hiring_job_type($text) {
@@ -535,18 +611,21 @@ function minc_hiring_type_tag($type) {
  * Staff header (Top Nav / Staff): logo, the one section staff can use, and
  * who is signed in. Positions and Settings belong to the admin header.
  */
-function minc_hiring_admin_nav() {
+function minc_hiring_admin_nav($on_dashboard = false, $current = 'candidates') {
     $user = wp_get_current_user();
     $name = $user->exists() ? $user->display_name : '';
+    $dashboard_url = minc_hiring_dashboard_url();
     ?>
     <header class="massinc-nav">
-        <div class="massinc-nav-brand">
+        <a class="massinc-nav-brand" href="<?php echo esc_url($dashboard_url); ?>">
             <img class="massinc-nav-logo" src="<?php echo esc_url(MINC_HIRING_URL . 'assets/images/massinc-logo.png'); ?>" alt="MassINC" width="207" height="36">
             <span class="massinc-nav-divider" aria-hidden="true"></span>
             <span class="massinc-nav-product">Applicant Tracking</span>
-        </div>
+        </a>
         <nav class="massinc-nav-tabs" aria-label="Applicant tracking">
-            <span class="massinc-nav-tab is-active" aria-current="page">Candidates</span>
+            <?php foreach (minc_hiring_nav_items($current) as $item) : ?>
+                <a class="massinc-nav-tab<?php echo $item['current'] ? ' is-active' : ''; ?>" href="<?php echo esc_url($item['url']); ?>"<?php echo ($item['current'] && ($on_dashboard || $item['key'] !== 'candidates')) ? ' aria-current="page"' : ''; ?>><?php echo esc_html($item['label']); ?></a>
+            <?php endforeach; ?>
         </nav>
         <?php if ($name) : ?>
             <div class="massinc-nav-user">

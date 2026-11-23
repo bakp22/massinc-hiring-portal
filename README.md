@@ -51,6 +51,17 @@ Ensure you have the following installed on your machine before beginning:
    | **Query MySQL DB** | `npx @wordpress/env cli db query "SHOW TABLES LIKE 'wp_massinc%';" ` |
    | **Watch Block Build** | `npm run start` |
 
+5. **Run the Tests** (the environment must be started first):
+   | Action | Command |
+   | :--- | :--- |
+   | **Everything** | `npm test` |
+   | **Backend (PHPUnit: API, database, roles, login)** | `npm run test:php` |
+   | **Email notifications (mocked, no WordPress)** | `npm run test:notifications` |
+   | **One test class** | `npm run test:php -- --filter Test_Ratings_Notes_API` |
+   | **One test method** | `npm run test:php -- --filter test_first_rating_is_saved` |
+
+   Tests run in a separate WordPress site with its own database (port `8889`), so they never touch the data on your dev site. They never send real email: `tests/bootstrap.php` fakes the Resend API and blocks any other outside request.
+
 ---
 
 ## 2. Code Architecture Overview

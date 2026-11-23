@@ -1,10 +1,10 @@
 {
-  "name": "hack4impact-bu/massinc-hiring-portal",
-  "description": "WordPress hiring portal plugin boilerplate",
-  "type": "wordpress-plugin",
-  "require": {},
-  "require-dev": {
-    "phpunit/phpunit": "^9.6",
-    "yoast/phpunit-polyfills": "^2.0"
-  }
+	"name": "hack4impact-bu/massinc-hiring-portal",
+	"description": "WordPress hiring portal plugin boilerplate",
+	"type": "wordpress-plugin",
+	"require": {},
+	"require-dev": {
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^2.0"
+	}
 }

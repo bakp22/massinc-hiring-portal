@@ -13,7 +13,7 @@ if (!$job_id && !empty($attributes['jobId'])) {
 }
 
 $job = $job_id ? Job::get_by_id($job_id) : null;
-$back_url = remove_query_arg('job_id', get_permalink());
+$back_url = minc_hiring_jobs_url();
 
 if (!$job || $job->get('status') !== 'open') {
     ?>
