@@ -33,7 +33,7 @@ class API {
             [
                 'methods'  => \WP_REST_Server::DELETABLE,
                 'callback' => [self::class, 'remove_staff_name'],
-                'permission_callback' => [self::class, 'can_edit_staff_names'],
+                'permission_callback' => [self::class, 'can_remove_staff_names'],
                 'args' => [
                     'name' => [
                         'type'     => 'string',
@@ -417,6 +417,21 @@ class API {
         return new \WP_Error(
             'rest_forbidden',
             'You are not allowed to change the staff list.',
+            ['status' => is_user_logged_in() ? 403 : 401]
+        );
+    }
+
+    /**
+     * Staff may add their own name to the list (they need it to rate), but
+     * only admins may take a name off it.
+     */
+    public static function can_remove_staff_names() {
+        if (current_user_can('edit_minc_applications')) {
+            return true;
+        }
+        return new \WP_Error(
+            'rest_forbidden',
+            'Only admins can remove names from the staff list.',
             ['status' => is_user_logged_in() ? 403 : 401]
         );
     }

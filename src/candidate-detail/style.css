@@ -271,11 +271,6 @@
     gap: var(--spacing-sm);
 }
 
-.massinc-visibility-note {
-    font-size: 13px;
-    line-height: 18px;
-}
-
 .massinc-avatar-sm {
     width: 32px;
     height: 32px;

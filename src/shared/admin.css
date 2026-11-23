@@ -161,6 +161,17 @@
     font-weight: 500;
     line-height: 24px;
     color: var(--color-text-secondary);
+    text-decoration: none;
+}
+
+a.massinc-nav-brand {
+    color: inherit;
+    text-decoration: none;
+}
+
+a.massinc-nav-tab:hover,
+a.massinc-nav-tab:focus-visible {
+    color: var(--color-text-primary);
 }
 
 .massinc-nav-tab.is-active {
@@ -509,6 +520,105 @@
     font-size: 14px;
     font-weight: 600;
     line-height: 20px;
+}
+
+/*
+ * Jobs and application pages shown to signed-in staff and admins in the
+ * portal template (templates/portal-page.php). Job cards follow the hi-fi's
+ * "00 · Careers page" open-roles list.
+ */
+.massinc-portal-header.massinc-ats {
+    background: var(--color-bg-page);
+}
+
+.massinc-portal-content.massinc-ats {
+    background: var(--color-bg-subtle);
+    padding: var(--spacing-2xl) var(--spacing-4xl) var(--spacing-4xl);
+}
+
+/* The application form brings its own page padding. */
+.massinc-portal-content.massinc-ats:has(> .massinc-application-form-block) {
+    padding: 0;
+}
+
+.massinc-portal-content .massinc-portal-title {
+    margin: 0 0 var(--spacing-xl);
+    font: 600 36px/44px var(--font-serif);
+    color: var(--color-text-primary);
+}
+
+.massinc-portal-content .minc-hiring-job-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 1280px;
+}
+
+.massinc-portal-content .minc-hiring-job {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-page);
+}
+
+.massinc-portal-content .minc-hiring-job > * {
+    grid-column: 1;
+    margin: 0;
+}
+
+.massinc-portal-content .minc-hiring-job h3 {
+    font: 600 20px/28px var(--font-sans);
+    color: var(--color-text-primary);
+}
+
+.massinc-portal-content .minc-hiring-job p {
+    margin-top: var(--spacing-2xs);
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-text-secondary);
+}
+
+.massinc-portal-content .minc-hiring-job p strong {
+    font-weight: 500;
+}
+
+.massinc-portal-content .minc-hiring-job > a {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-default);
+    color: var(--color-text-on-brand);
+    font: 600 16px/24px var(--font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.massinc-portal-content .minc-hiring-job > a:hover,
+.massinc-portal-content .minc-hiring-job > a:focus-visible {
+    background: #8a1021;
+}
+
+@media (max-width: 782px) {
+    .massinc-portal-content.massinc-ats {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .massinc-portal-content .minc-hiring-job {
+        grid-template-columns: 1fr;
+        row-gap: var(--spacing-xs);
+    }
+
+    .massinc-portal-content .minc-hiring-job > a {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
+        margin-top: var(--spacing-xs);
+    }
 }
 
 @media (max-width: 782px) {

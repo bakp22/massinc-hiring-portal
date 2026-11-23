@@ -25,7 +25,7 @@ function minc_hiring_admin_jobs_page() {
     }
 
     global $wpdb;
-    $table = $wpdb->prefix . 'minc_jobs';
+    $table = $wpdb->prefix . 'massinc_jobs';
 
     if (
         isset($_POST['minc_hiring_action'], $_POST['_wpnonce']) &&
@@ -99,9 +99,9 @@ function minc_hiring_admin_applications_page() {
         "SELECT a.*, j.title AS job_title,
                 CONCAT(c.first_name, ' ', c.last_name) AS candidate_name,
                 c.email AS candidate_email
-         FROM {$wpdb->prefix}minc_applications a
-         JOIN {$wpdb->prefix}minc_jobs j ON j.id = a.job_id
-         JOIN {$wpdb->prefix}minc_candidates c ON c.id = a.candidate_id
+         FROM {$wpdb->prefix}massinc_applications a
+         JOIN {$wpdb->prefix}massinc_jobs j ON j.id = a.job_id
+         JOIN {$wpdb->prefix}massinc_candidates c ON c.id = a.candidate_id
          ORDER BY a.created_at DESC"
     );
     ?>

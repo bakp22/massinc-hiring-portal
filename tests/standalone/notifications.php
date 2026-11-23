@@ -3,14 +3,14 @@
  * Standalone test runner for MassINC\Notifications (no wp-env required).
  *
  * Usage (Mock Mode - runs automated assertion suite):
- *   docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/test-notifications-standalone.php
+ *   docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/standalone/notifications.php
  *
  * Usage (Live Mode - sends a real test email via Resend API using .env):
- *   docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/test-notifications-standalone.php --live --to=you@example.com
+ *   docker run --rm -v "${PWD}:/app" -w /app php:8.2-cli php tests/standalone/notifications.php --live --to=you@example.com
  */
 
-define('ABSPATH', __DIR__ . '/../');
-define('MINC_HIRING_PATH', dirname(__DIR__) . '/');
+define('ABSPATH', dirname(__DIR__, 2) . '/');
+define('MINC_HIRING_PATH', dirname(__DIR__, 2) . '/');
 define('HOUR_IN_SECONDS', 3600);
 define('ARRAY_A', 'ARRAY_A');
 define('OBJECT', 'OBJECT');
@@ -331,7 +331,7 @@ if (in_array('--live', $argv_list, true)) {
         }
     }
     if (empty($to_email)) {
-        fwrite(STDERR, "Usage: php tests/test-notifications-standalone.php --live --to=you@example.com\n");
+        fwrite(STDERR, "Usage: php tests/standalone/notifications.php --live --to=you@example.com\n");
         exit(1);
     }
 

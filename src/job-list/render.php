@@ -33,7 +33,7 @@ if (!$jobs) {
                 <p><strong>Type:</strong> <?php echo esc_html($job->employment_type); ?></p>
             <?php endif; ?>
 
-            <a href="<?php echo esc_url(add_query_arg('job_id', (int) $job->id, get_permalink())); ?>">
+            <a href="<?php echo esc_url(minc_hiring_apply_url($job->id)); ?>">
                 View position / Apply
             </a>
         </article>
