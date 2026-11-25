@@ -120,7 +120,7 @@ foreach ($stages as $key => $label) {
 
         <div class="massinc-detail-header">
             <div class="massinc-detail-identity">
-                <h1 class="massinc-detail-name"><?php echo esc_html($candidate['name']); ?></h1>
+                <h1 class="massinc-detail-name"><?php echo minc_hiring_candidate_name($candidate); ?></h1>
                 <?php echo minc_hiring_stage_badge($candidate['stage']); ?>
                 <span class="massinc-rating" data-avg-header></span>
             </div>
@@ -246,6 +246,9 @@ foreach ($stages as $key => $label) {
                         <button type="submit" class="massinc-btn massinc-btn-primary massinc-btn-start">Save note</button>
                     </form>
                 </section>
+                <?php if (!empty($candidate['previous_applicant'])) : ?>
+                    <p class="massinc-note-small" id="massinc-previous-applicant-note">* Past applicant: previously applied and received an offer or was rejected.</p>
+                <?php endif; ?>
             </div>
 
             <aside class="massinc-detail-sidebar">

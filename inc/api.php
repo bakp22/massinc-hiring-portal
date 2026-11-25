@@ -18,6 +18,16 @@ class API {
             'permission_callback' => '__return_true',
         ]);
 
+        register_rest_route('massinc/v1', '/jobs/(?P<id>\d+)/requirements', [
+            'methods' => \WP_REST_Server::EDITABLE,
+            'callback' => [self::class, 'update_job_requirement'],
+            'permission_callback' => [self::class, 'can_manage_jobs'],
+            'args' => [
+                'field' => ['type' => 'string', 'required' => true, 'enum' => array_keys(Job::required_field_defaults())],
+                'required' => ['type' => 'boolean', 'required' => true],
+            ],
+        ]);
+
         register_rest_route('massinc/v1', '/staff-names', [
             [
                 'methods'  => \WP_REST_Server::CREATABLE,
@@ -169,6 +179,28 @@ class API {
         return new \WP_REST_Response($jobs, 200);
     }
 
+    public static function can_manage_jobs() {
+        if (current_user_can('manage_minc_hiring')) {
+            return true;
+        }
+        return new \WP_Error('rest_forbidden', 'Only administrators can manage positions.', [
+            'status' => is_user_logged_in() ? 403 : 401,
+        ]);
+    }
+
+    public static function update_job_requirement(\WP_REST_Request $request) {
+        $job = Job::get_by_id($request['id']);
+        if (!$job) {
+            return new \WP_Error('massinc_job_not_found', 'Position not found.', ['status' => 404]);
+        }
+        $requirements = $job->get_required_fields();
+        $requirements[$request->get_param('field')] = $request->get_param('required');
+        if (!Job::update_required_fields($job->get_id(), $requirements)) {
+            return new \WP_Error('massinc_job_failed', 'Could not save the requirement. Please try again.', ['status' => 500]);
+        }
+        return new \WP_REST_Response(['required_fields' => $requirements], 200);
+    }
+
     public static function submit_application(\WP_REST_Request $request) {
         $first_name = $request->get_param('first_name');
         $last_name  = $request->get_param('last_name');
@@ -185,7 +217,11 @@ class API {
         // submission leaves no candidate or application behind.
         $files  = Attachments::collect($request->get_file_params());
         $links  = Attachments::normalize_links($request->get_param('sample_urls'));
-        $errors = Attachments::validate($files, $links);
+        $required_fields = $job->get_required_fields();
+        $errors = Attachments::validate($files, $links, $required_fields);
+        if ($required_fields['phone'] && ($phone === null || $phone === '')) {
+            $errors['phone'] = 'Please enter your phone number.';
+        }
         if ($errors) {
             return new \WP_Error(
                 'massinc_invalid_attachments',

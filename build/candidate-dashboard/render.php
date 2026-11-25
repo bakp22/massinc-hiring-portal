@@ -10,6 +10,17 @@ if (!minc_hiring_require_staff()) {
     return;
 }
 
+if (isset($_GET['hiring_view']) && $_GET['hiring_view'] === 'positions') {
+    if (!minc_hiring_can_manage()) {
+        echo '<p class="massinc-ats-denied">Only administrators can manage positions.</p>';
+        return;
+    }
+    wp_enqueue_style('minc-hiring-positions');
+    wp_enqueue_script('minc-hiring-positions');
+    require __DIR__ . '/positions.php';
+    return;
+}
+
 $candidates = minc_hiring_get_candidates();
 $detail_base = !empty($attributes['detailUrl'])
     ? $attributes['detailUrl']
@@ -27,7 +38,7 @@ sort($positions, SORT_NATURAL | SORT_FLAG_CASE);
 ?>
 
 <div <?php echo $wrapper_attributes; ?>>
-    <?php minc_hiring_admin_nav(); ?>
+    <?php minc_hiring_admin_nav(true); ?>
 
     <div class="massinc-dashboard-body">
         <div class="massinc-dashboard-header">
@@ -101,7 +112,7 @@ sort($positions, SORT_NATURAL | SORT_FLAG_CASE);
                      data-rating="<?php echo esc_attr($candidate['rating'] ?? -1); ?>"
                      data-applied="<?php echo esc_attr($candidate['applied_ts']); ?>"
                      data-search="<?php echo esc_attr(mb_strtolower($candidate['name'] . ' ' . $candidate['position'] . ' ' . $candidate['email'])); ?>">
-                    <span class="massinc-col-name massinc-candidate-name" role="cell"><?php echo esc_html($candidate['name']); ?></span>
+                    <span class="massinc-col-name massinc-candidate-name" role="cell"><?php echo minc_hiring_candidate_name($candidate); ?></span>
                     <span class="massinc-col-position" role="cell"><?php echo esc_html($candidate['position']); ?></span>
                     <span class="massinc-col-type" role="cell"><?php echo minc_hiring_type_tag($candidate['type']); ?></span>
                     <span class="massinc-col-stage" role="cell"><?php echo minc_hiring_stage_badge($candidate['stage']); ?></span>

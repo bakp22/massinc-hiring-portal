@@ -135,7 +135,7 @@ class Test_Page_Navigation extends WP_UnitTestCase {
     public function test_admin_header_falls_back_to_wp_admin_without_portal_pages() {
         $html = $this->nav_html('administrator');
 
-        $this->assertSame(['Candidates', 'Jobs', 'Settings'], $this->nav_labels($html));
+        $this->assertSame(['Candidates', 'Positions', 'Jobs', 'Settings'], $this->nav_labels($html));
         $this->assertStringContainsString('href="' . esc_url(admin_url('admin.php?page=minc-hiring')) . '"', $html);
         $this->assertStringContainsString('href="' . esc_url(admin_url('admin.php?page=minc-hiring-emails')) . '"', $html);
     }

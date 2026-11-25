@@ -1,6 +1,9 @@
 <?php
 defined('ABSPATH') || exit;
 
+use MassINC\Models\Attachment;
+use MassINC\Models\Job;
+
 function minc_hiring_register_admin() {
     add_action('admin_menu', function () {
         add_menu_page(
@@ -38,17 +41,17 @@ function minc_hiring_admin_jobs_page() {
         $employment_type = sanitize_text_field(wp_unslash($_POST['employment_type'] ?? ''));
 
         if ($title !== '') {
-            $now = current_time('mysql');
-            $wpdb->insert($table, [
+            $created = Job::create([
                 'title' => $title,
                 'description' => $description,
                 'location' => $location,
                 'employment_type' => $employment_type,
-                'status' => 'open',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ], ['%s','%s','%s','%s','%s','%s','%s']);
-            echo '<div class="notice notice-success"><p>Job created.</p></div>';
+            ]);
+            if (!$created) {
+                echo '<div class="notice notice-error"><p>Could not create the job. Please try again.</p></div>';
+            } else {
+                echo '<div class="notice notice-success"><p>Job created.</p></div>';
+            }
         }
     }
 
@@ -104,14 +107,18 @@ function minc_hiring_admin_applications_page() {
          JOIN {$wpdb->prefix}massinc_candidates c ON c.id = a.candidate_id
          ORDER BY a.created_at DESC"
     );
+    $attachments = Attachment::get_for_applications(wp_list_pluck($applications ?: [], 'id'));
     ?>
     <div class="wrap">
         <h1>Hiring — Applications</h1>
         <table class="widefat striped">
             <thead>
-                <tr><th>Candidate</th><th>Email</th><th>Job</th><th>Status</th><th>Submitted</th></tr>
+                <tr><th scope="col">Candidate</th><th scope="col">Email</th><th scope="col">Job</th><th scope="col">Status</th><th scope="col">Submitted</th><th scope="col">Files &amp; links</th></tr>
             </thead>
             <tbody>
+            <?php if (!$applications) : ?>
+                <tr><td colspan="6">No applications yet.</td></tr>
+            <?php endif; ?>
             <?php foreach ($applications as $application): ?>
                 <tr>
                     <td><?php echo esc_html($application->candidate_name); ?></td>
@@ -119,12 +126,47 @@ function minc_hiring_admin_applications_page() {
                     <td><?php echo esc_html($application->job_title); ?></td>
                     <td><?php echo esc_html($application->status); ?></td>
                     <td><?php echo esc_html($application->created_at); ?></td>
+                    <td><?php minc_hiring_admin_application_files($attachments[(int) $application->id] ?? []); ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
     </div>
     <?php
+}
+
+/** Links to private downloads stay behind the existing staff permission check. */
+function minc_hiring_admin_application_files(array $attachments) {
+    if (!$attachments) {
+        echo '<span>No files or links submitted.</span>';
+        return;
+    }
+
+    $labels = [
+        Attachment::KIND_RESUME         => 'CV / resume',
+        Attachment::KIND_COVER_LETTER   => 'Cover letter',
+        Attachment::KIND_WRITING_SAMPLE => 'Writing sample',
+        Attachment::KIND_LINK           => 'Link',
+    ];
+    echo '<ul class="minc-application-files">';
+    foreach ($attachments as $attachment) {
+        $label = $labels[$attachment->get_kind()] ?? 'File';
+        if ($attachment->is_link()) {
+            $url = (string) $attachment->get('url');
+            $name = $url;
+        } else {
+            $url = add_query_arg(
+                '_wpnonce',
+                wp_create_nonce('wp_rest'),
+                rest_url('massinc/v1/attachments/' . $attachment->get_id() . '/download')
+            );
+            $name = $attachment->get('original_name') ?: 'Download file';
+        }
+        ?>
+        <li><strong><?php echo esc_html($label); ?>:</strong> <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($name); ?><span class="screen-reader-text"> (opens in a new tab)</span></a></li>
+        <?php
+    }
+    echo '</ul>';
 }
 
 function minc_hiring_admin_emails_page() {
