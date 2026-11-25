@@ -179,6 +179,13 @@ a.massinc-nav-tab:focus-visible {
     color: var(--color-text-primary);
 }
 
+.massinc-previous-applicant-marker {
+    margin-inline-start: 2px;
+    font-size: 0.75em;
+    line-height: 0;
+    vertical-align: super;
+}
+
 .massinc-avatar {
     display: inline-flex;
     flex: none;

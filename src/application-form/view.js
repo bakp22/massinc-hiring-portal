@@ -56,6 +56,9 @@
 		el.textContent = message || '';
 		el.hidden = ! message;
 		field.classList.toggle( 'has-error', !! message );
+		field.querySelectorAll( 'input' ).forEach( function ( input ) {
+			input.setAttribute( 'aria-invalid', message ? 'true' : 'false' );
+		} );
 	}
 
 	function initUpload( field, state ) {
@@ -259,10 +262,37 @@
 				setFieldError( fieldFor( 'applicant_email' ), '' );
 			}
 
-			if ( files.resume.length === 0 ) {
-				fail( 'resume', 'Please attach your resume.' );
+			var phoneInput = form.elements.phone;
+			if (
+				phoneInput.required &&
+				! phoneInput.value.replace( /\D/g, '' )
+			) {
+				fail( 'phone', 'Please enter your phone number.' );
+			} else {
+				setFieldError( fieldFor( 'phone' ), '' );
 			}
 
+			var uploadMessages = {
+				resume: 'Please attach your CV or resume.',
+				cover_letter: 'Please attach your cover letter.',
+				writing_samples:
+					'Please attach at least one writing or content sample.',
+			};
+			Object.keys( uploadMessages ).forEach( function ( name ) {
+				var field = fieldFor( name );
+				if (
+					field.dataset.required === '1' &&
+					files[ name ].length === 0
+				) {
+					fail( name, uploadMessages[ name ] );
+				} else {
+					setFieldError( field, '' );
+				}
+			} );
+
+			var hasLink = sampleLinks().some( function ( input ) {
+				return input.value.trim() !== '';
+			} );
 			var badLink = sampleLinks().filter( function ( input ) {
 				var value = input.value.trim();
 				var invalid = value !== '' && ! isValidUrl( value );
@@ -272,7 +302,12 @@
 				);
 				return invalid;
 			} )[ 0 ];
-			if ( badLink ) {
+			if ( linkField.dataset.required === '1' && ! hasLink ) {
+				fail(
+					'sample_url',
+					'Please add at least one link to your writing or content samples.'
+				);
+			} else if ( badLink ) {
 				fail(
 					'sample_url',
 					'Please enter a full link starting with http:// or https://.'

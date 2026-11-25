@@ -125,7 +125,7 @@ function minc_hiring_portal_blocks() {
 }
 
 /**
- * Links in the staff header, in order. Admins also get Jobs and Settings.
+ * Links in the staff header, in order. Admins also get Positions, Jobs and Settings.
  * Jobs goes to the page with the Job List block; Settings to the page with
  * the minc-hiring/email-settings block once it exists. Each falls back to the
  * matching wp-admin screen when the site has no such page.
@@ -139,6 +139,11 @@ function minc_hiring_nav_items($current = 'candidates') {
     ];
 
     if (minc_hiring_can_manage()) {
+        $items[] = [
+            'key'   => 'positions',
+            'label' => 'Positions',
+            'url'   => add_query_arg('hiring_view', 'positions', minc_hiring_dashboard_url()),
+        ];
         $items[] = [
             'key'   => 'jobs',
             'label' => 'Jobs',
@@ -638,6 +643,18 @@ function minc_hiring_dropdown(array $args) {
         <ul class="massinc-dd-list" id="<?php echo esc_attr($list_id); ?>" role="listbox" data-dd-list hidden></ul>
     </div>
     <?php
+}
+
+/** Escaped display name, with an accessible marker for a previous applicant. */
+function minc_hiring_candidate_name(array $candidate) {
+    $name = esc_html($candidate['name']);
+    if (empty($candidate['previous_applicant'])) {
+        return $name;
+    }
+
+    return $name
+        . '<sup class="massinc-previous-applicant-marker" aria-hidden="true" title="Past applicant">*</sup>'
+        . '<span class="screen-reader-text"> (Past applicant)</span>';
 }
 
 /**

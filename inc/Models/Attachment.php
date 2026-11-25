@@ -72,6 +72,27 @@ class Attachment extends Model {
         }, $rows ?: []);
     }
 
+    /** Load files and links for an applications table without a query per row. */
+    public static function get_for_applications(array $application_ids) {
+        global $wpdb;
+        $application_ids = array_values(array_filter(array_map('absint', $application_ids)));
+        if (!$application_ids) {
+            return [];
+        }
+
+        $table = $wpdb->prefix . 'massinc_application_attachments';
+        $placeholders = implode(', ', array_fill(0, count($application_ids), '%d'));
+        $rows = $wpdb->get_results(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE application_id IN ({$placeholders}) ORDER BY id ASC", $application_ids),
+            ARRAY_A
+        );
+        $attachments = [];
+        foreach ($rows ?: [] as $row) {
+            $attachments[(int) $row['application_id']][] = new self($row);
+        }
+        return $attachments;
+    }
+
     /**
      * Insert an attachment row: a stored file (resume, cover letter, writing
      * sample) or a link.

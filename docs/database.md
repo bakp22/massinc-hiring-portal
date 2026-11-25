@@ -2,7 +2,7 @@
 
 ## Jobs
 
-`wp_minc_jobs`
+`wp_massinc_jobs`
 
 Stores open/closed roles.
 
@@ -16,11 +16,21 @@ Important fields:
 - `salary_min`
 - `salary_max`
 - `status`
+- `required_fields`: JSON object with boolean `phone`, `resume` (CV / resume),
+  `cover_letter`, `writing_samples`, and `sample_url` (links) requirements.
+  Existing jobs with `NULL` retain the original default: resume required,
+  all other configurable fields optional. Name and email remain required.
 - timestamps
+
+Administrators change requirements in the **Positions** tab of the Hiring
+Candidate Dashboard block. Each switch saves through the authenticated
+`PATCH /massinc/v1/jobs/{id}/requirements` endpoint. Staff cannot change these
+settings. Only open positions appear in the toggle list. Successful changes save
+silently; failed saves restore the previous switch value and show an error.
 
 ## Candidates
 
-`wp_minc_candidates`
+`wp_massinc_candidates`
 
 Stores reusable applicant identity/contact information.
 
@@ -42,12 +52,15 @@ out on each load (`previous_applicant` on each row from
 candidate has an earlier application at Offer or Rejected. Someone applying to
 several positions while their applications are still in progress isn't one.
 
+Previous applicants show an asterisk beside their name on the dashboard and
+detail page. The detail page explains the marker below Notes.
+
 The table still has an unused `is_past_applicant` column from an earlier
 version. Nothing reads or writes it.
 
 ## Applications
 
-`wp_minc_applications`
+`wp_massinc_applications`
 
 Connects a candidate to a job.
 
@@ -81,6 +94,10 @@ closed to direct requests. Staff download them through
 
 Each application keeps its own files and links. Applying to another position
 never changes the files on an earlier application.
+
+WordPress **Hiring → Applications** lists these files and links per application.
+File links use the authenticated download route; they do not expose stored paths
+or add private candidate documents to the public Media Library.
 
 ## Ratings
 

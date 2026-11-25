@@ -35,11 +35,13 @@ $job_meta = array_filter([
     $job->get('employment_type'),
 ]);
 
-// Shared by all three upload areas: [field name, label, hint, max files, required].
+$required_fields = $job->get_required_fields();
+
+// Shared by all three upload areas: [field name, label, hint, max files].
 $upload_fields = [
-    ['resume', 'Resume', '', 1, true],
-    ['cover_letter', 'Cover letter', 'Optional, but it helps us hear your voice.', 1, false],
-    ['writing_samples', 'Writing or content samples', 'Up to 3 files.', 3, false],
+    ['resume', 'CV / resume', '', 1],
+    ['cover_letter', 'Cover letter', 'It helps us hear your voice.', 1],
+    ['writing_samples', 'Writing or content samples', 'Up to 3 files.', 3],
 ];
 ?>
 
@@ -80,13 +82,15 @@ $upload_fields = [
         </div>
 
         <div class="massinc-field" data-field="phone">
-            <label for="massinc-phone">Phone</label>
-            <input type="tel" id="massinc-phone" name="phone" autocomplete="tel" placeholder="e.g. (617) 555-0142">
-            <p class="massinc-field-hint">Optional &mdash; only used if we need to reach you quickly.</p>
+            <label for="massinc-phone">Phone<?php if ($required_fields['phone']) : ?> <span aria-hidden="true">*</span><?php endif; ?></label>
+            <input type="tel" id="massinc-phone" name="phone" autocomplete="tel" placeholder="e.g. (617) 555-0142" <?php echo $required_fields['phone'] ? 'required' : ''; ?>>
+            <p class="massinc-field-hint"><?php echo $required_fields['phone'] ? 'Only used if we need to reach you quickly.' : 'Optional — only used if we need to reach you quickly.'; ?></p>
             <p class="massinc-field-error" hidden></p>
         </div>
 
-        <?php foreach ($upload_fields as [$name, $label, $hint, $max, $required]) : ?>
+        <?php foreach ($upload_fields as [$name, $label, $hint, $max]) :
+            $required = $required_fields[$name];
+            ?>
             <div class="massinc-field massinc-upload"
                  data-field="<?php echo esc_attr($name); ?>"
                  data-max-files="<?php echo esc_attr($max); ?>"
@@ -99,6 +103,7 @@ $upload_fields = [
                     <input type="file" class="massinc-file-input"
                            id="massinc-<?php echo esc_attr($name); ?>"
                            accept=".pdf,.docx"
+                           aria-required="<?php echo $required ? 'true' : 'false'; ?>"
                            <?php echo $max > 1 ? 'multiple' : ''; ?>
                            aria-labelledby="massinc-<?php echo esc_attr($name); ?>-label">
                     <label for="massinc-<?php echo esc_attr($name); ?>" class="massinc-dropzone-prompt">
@@ -113,15 +118,15 @@ $upload_fields = [
             </div>
         <?php endforeach; ?>
 
-        <div class="massinc-field" data-field="sample_url">
-            <label for="massinc-sample-url">Link to writing or content samples</label>
+        <div class="massinc-field" data-field="sample_url" data-required="<?php echo $required_fields['sample_url'] ? '1' : '0'; ?>">
+            <label for="massinc-sample-url">Link to writing or content samples<?php if ($required_fields['sample_url']) : ?> <span aria-hidden="true">*</span><?php endif; ?></label>
             <div class="massinc-link-list">
                 <div class="massinc-link-row">
-                    <input type="url" id="massinc-sample-url" name="sample_url" placeholder="https://">
+                    <input type="url" id="massinc-sample-url" name="sample_url" placeholder="https://" aria-required="<?php echo $required_fields['sample_url'] ? 'true' : 'false'; ?>">
                 </div>
             </div>
             <button type="button" class="massinc-add-link">+ Add another link</button>
-            <p class="massinc-field-hint">Optional &mdash; an alternative to uploading a file.</p>
+            <p class="massinc-field-hint"><?php echo $required_fields['sample_url'] ? 'Add at least one link, even if you also upload samples.' : 'Optional — share links to your work.'; ?></p>
             <p class="massinc-field-error" hidden></p>
         </div>
 

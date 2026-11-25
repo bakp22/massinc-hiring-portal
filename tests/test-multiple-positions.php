@@ -17,6 +17,8 @@ class Test_Multiple_Positions extends WP_UnitTestCase {
     }
 
     public function tear_down() {
+        unset($_GET['application']);
+        wp_set_current_user(0);
         global $wpdb;
         $table = $wpdb->prefix . 'massinc_application_attachments';
         foreach ($wpdb->get_col("SELECT stored_name FROM {$table} WHERE stored_name != ''") as $stored) {
@@ -201,6 +203,63 @@ class Test_Multiple_Positions extends WP_UnitTestCase {
         $reporter_id = $this->apply($this->reporter_job, 'reporter.pdf')->get_data()['application_id'];
 
         $this->assertTrue(minc_hiring_get_candidate($reporter_id)['previous_applicant']);
+    }
+
+    private function parse_html($html) {
+        $document = new DOMDocument();
+        @$document->loadHTML($html);
+        return new DOMXPath($document);
+    }
+
+    public static function previous_decisions() {
+        return [['offer'], ['rejected']];
+    }
+
+    /** @dataProvider previous_decisions */
+    public function test_previous_applicant_marker_is_visible_on_both_screens($decision) {
+        [$writer_id, $reporter_id] = $this->apply_to_both();
+        Application::update_status($writer_id, $decision);
+        wp_set_current_user(self::factory()->user->create(['role' => 'minc_hiring_staff']));
+
+        $dashboard = $this->parse_html(render_block([
+            'blockName' => 'minc-hiring/candidate-dashboard', 'attrs' => [],
+        ]));
+        $this->assertSame(1, $dashboard->query('//div[@role="row"][@data-position="Data reporter"]//sup[@title="Past applicant"][text()="*"]')->length);
+        $this->assertSame(0, $dashboard->query('//div[@role="row"][@data-position="Staff writer"]//sup[@title="Past applicant"]')->length);
+
+        $_GET['application'] = $reporter_id;
+        $detail = $this->parse_html(render_block([
+            'blockName' => 'minc-hiring/candidate-detail', 'attrs' => [],
+        ]));
+        $this->assertSame(1, $detail->query('//h1/sup[@title="Past applicant"][text()="*"]')->length);
+        $this->assertSame(1, $detail->query('//h1/span[contains(@class, "screen-reader-text")][contains(text(), "Past applicant")]')->length);
+        $legend = $detail->query('//section[@aria-labelledby="massinc-notes-title"]/following-sibling::p[1][@id="massinc-previous-applicant-note"]');
+        $this->assertSame(1, $legend->length, 'The explanation belongs below the Notes section.');
+        $this->assertSame('* Past applicant: previously applied and received an offer or was rejected.', $legend->item(0)->textContent);
+
+        // The earlier application itself is not marked as a return visit.
+        $_GET['application'] = $writer_id;
+        $original = $this->parse_html(render_block([
+            'blockName' => 'minc-hiring/candidate-detail', 'attrs' => [],
+        ]));
+        $this->assertSame(0, $original->query('//h1/sup[@title="Past applicant"]')->length);
+        $this->assertSame(0, $original->query('//*[@id="massinc-previous-applicant-note"]')->length);
+    }
+
+    public function test_in_progress_applications_have_no_previous_applicant_marker() {
+        [$writer_id, $reporter_id] = $this->apply_to_both();
+        wp_set_current_user(self::factory()->user->create(['role' => 'minc_hiring_staff']));
+        $dashboard = $this->parse_html(render_block([
+            'blockName' => 'minc-hiring/candidate-dashboard', 'attrs' => [],
+        ]));
+        $this->assertSame(0, $dashboard->query('//sup[@title="Past applicant"]')->length);
+
+        $_GET['application'] = $reporter_id;
+        $detail = $this->parse_html(render_block([
+            'blockName' => 'minc-hiring/candidate-detail', 'attrs' => [],
+        ]));
+        $this->assertSame(0, $detail->query('//h1/sup[@title="Past applicant"]')->length);
+        $this->assertSame(0, $detail->query('//*[@id="massinc-previous-applicant-note"]')->length);
     }
 
     public function test_the_sample_data_shows_one_person_under_two_positions() {

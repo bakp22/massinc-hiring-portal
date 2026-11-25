@@ -7,7 +7,7 @@ class Database {
     /**
      * Bump when create_tables() changes so existing installs pick it up.
      */
-    const SCHEMA_VERSION = '5';
+    const SCHEMA_VERSION = '6';
 
     /**
      * Run create_tables() on installs created before the current schema
@@ -46,6 +46,7 @@ class Database {
             salary_min decimal(10,2) DEFAULT NULL,
             salary_max decimal(10,2) DEFAULT NULL,
             status varchar(50) NOT NULL DEFAULT 'open',
+            required_fields text DEFAULT NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),

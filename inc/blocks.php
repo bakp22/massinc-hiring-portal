@@ -100,6 +100,8 @@ function minc_hiring_register_blocks() {
         wp_register_style('minc-hiring-ats-admin', MINC_HIRING_URL . 'src/shared/admin.css', [], minc_hiring_file_version('src/shared/admin.css'));
         // The custom dropdown both blocks' view.js files build on (see their view.asset.php).
         wp_register_script('minc-hiring-ats-select', MINC_HIRING_URL . 'src/shared/select.js', [], minc_hiring_file_version('src/shared/select.js'), true);
+        wp_register_style('minc-hiring-positions', MINC_HIRING_URL . 'src/candidate-dashboard/positions.css', ['minc-hiring-ats-admin'], minc_hiring_file_version('src/candidate-dashboard/positions.css'));
+        wp_register_script('minc-hiring-positions', MINC_HIRING_URL . 'src/candidate-dashboard/positions.js', [], minc_hiring_file_version('src/candidate-dashboard/positions.js'), true);
 
         register_block_type(MINC_HIRING_PATH . 'src/job-list');
         register_block_type(MINC_HIRING_PATH . 'src/application-form');

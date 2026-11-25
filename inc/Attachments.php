@@ -92,11 +92,22 @@ class Attachments {
      *
      * @return array<string, string> Field name => error message; empty if valid.
      */
-    public static function validate(array $files, array $links) {
+    public static function validate(array $files, array $links, ?array $required_fields = null) {
         $errors = [];
+        $required_fields = $required_fields ?? \MassINC\Models\Job::required_field_defaults();
 
-        if (!$files['resume']) {
-            $errors['resume'] = 'Please attach your resume.';
+        $required_messages = [
+            'resume'          => 'Please attach your CV or resume.',
+            'cover_letter'    => 'Please attach your cover letter.',
+            'writing_samples' => 'Please attach at least one writing or content sample.',
+        ];
+        foreach ($required_messages as $field => $message) {
+            if (!empty($required_fields[$field]) && !$files[$field]) {
+                $errors[$field] = $message;
+            }
+        }
+        if (!empty($required_fields['sample_url']) && !$links) {
+            $errors['sample_url'] = 'Please add at least one link to your writing or content samples.';
         }
         if (count($files['resume']) > 1) {
             $errors['resume'] = 'Only one resume can be attached.';
