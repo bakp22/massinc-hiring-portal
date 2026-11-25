@@ -31,8 +31,19 @@ Important fields:
 - name (`first_name`, `last_name`)
 - `email`
 - `phone`
-- `is_past_applicant` (flag set to `1` when a candidate has applied previously by email or name)
 - timestamps
+
+A person who applies again (same email or name) keeps one candidate record,
+with a new application for each position.
+
+Whether someone is a previous applicant isn't stored. The dashboard works it
+out on each load (`previous_applicant` on each row from
+`minc_hiring_get_candidates()`): a row is a previous applicant if the same
+candidate has an earlier application at Offer or Rejected. Someone applying to
+several positions while their applications are still in progress isn't one.
+
+The table still has an unused `is_past_applicant` column from an earlier
+version. Nothing reads or writes it.
 
 ## Applications
 
@@ -67,6 +78,9 @@ saved under a random name in `wp-content/uploads/massinc-hiring/`, which is
 closed to direct requests. Staff download them through
 `GET /massinc/v1/attachments/{id}/download`, which requires the
 `view_minc_applications` capability.
+
+Each application keeps its own files and links. Applying to another position
+never changes the files on an earlier application.
 
 ## Ratings
 

@@ -25,6 +25,37 @@ function minc_hiring_stages() {
     ];
 }
 
+
+const MINC_HIRING_DECIDED_STAGES = ['offer', 'rejected'];
+
+/**
+ * @param array $candidates Rows shaped like minc_hiring_get_candidates().
+ * @return array The same rows, each with `previous_applicant` (bool).
+ */
+function minc_hiring_mark_previous_applicants(array $candidates) {
+    $decided = [];
+    foreach ($candidates as $row) {
+        if (in_array($row['stage'], MINC_HIRING_DECIDED_STAGES, true)) {
+            $decided[$row['candidate_id']][] = $row;
+        }
+    }
+
+    foreach ($candidates as &$row) {
+        $row['previous_applicant'] = false;
+        foreach ($decided[$row['candidate_id']] ?? [] as $other) {
+            $earlier = $other['applied_ts'] < $row['applied_ts']
+                || ($other['applied_ts'] === $row['applied_ts'] && $other['id'] < $row['id']);
+            if ($other['id'] !== $row['id'] && $earlier) {
+                $row['previous_applicant'] = true;
+                break;
+            }
+        }
+    }
+    unset($row);
+
+    return $candidates;
+}
+
 /**
  * Stored application status => ATS stage.
  */
@@ -211,6 +242,7 @@ function minc_hiring_sample_candidates() {
         ['sample-priya', 'Priya Raghunathan', 'Policy analyst', 'offer', '9 Aug 2026', 4.9, 4, 'priya.raghunathan@gmail.com'],
         ['sample-daniel', 'Daniel Reyes', 'Staff writer', 'reviewing', '14 Aug 2026', 4.7, 3, 'daniel.reyes@gmail.com'],
         ['sample-maya', 'Maya Okonkwo', 'Staff writer', 'interview', '12 Aug 2026', 4.3, 3, 'maya.okonkwo@gmail.com'],
+        ['sample-maya-data', 'Maya Okonkwo', 'Data reporter', 'applied', '15 Aug 2026', null, 0, 'maya.okonkwo@gmail.com'],
         ['sample-colin', 'Colin Mercer', 'Data reporter', 'reviewing', '17 Aug 2026', 4.0, 3, 'colin.mercer@gmail.com'],
         ['sample-aisha', 'Aisha Bennett', 'Policy research intern', 'rejected', '4 Aug 2026', 2.5, 2, 'aisha.bennett@gmail.com'],
         ['sample-tomas', 'Tomás Oliveira', 'Policy research intern', 'applied', '18 Aug 2026', null, 0, 'tomas.oliveira@gmail.com'],
@@ -221,6 +253,7 @@ function minc_hiring_sample_candidates() {
         $slug = preg_replace('/[^a-z]/', '', strtolower((string) iconv('UTF-8', 'ASCII//TRANSLIT', $name)));
         $candidates[] = [
             'id'        => $id,
+            'candidate_id' => $email,
             'name'      => $name,
             'position'  => $position,
             'type'      => minc_hiring_job_type($position),
@@ -243,6 +276,13 @@ function minc_hiring_sample_candidates() {
 
     // Maya's detail screen is the one the hi-fi spells out in full.
     foreach ($candidates as &$candidate) {
+        if ($candidate['id'] === 'sample-maya-data') {
+            $candidate['materials'] = [
+                ['name' => 'maya-okonkwo-resume.pdf', 'ext' => 'PDF', 'meta' => '228 KB · Uploaded 15 Aug 2026', 'href' => '', 'action' => 'Download'],
+                ['name' => 'data-reporting-cover-letter.pdf', 'ext' => 'PDF', 'meta' => '96 KB · Uploaded 15 Aug 2026', 'href' => '', 'action' => 'Download'],
+            ];
+            continue;
+        }
         if ($candidate['id'] !== 'sample-maya') {
             continue;
         }
@@ -263,7 +303,7 @@ function minc_hiring_sample_candidates() {
         return $b['applied_ts'] <=> $a['applied_ts'];
     });
 
-    return $candidates;
+    return minc_hiring_mark_previous_applicants($candidates);
 }
 
 function minc_hiring_format_bytes($bytes) {
@@ -394,7 +434,7 @@ function minc_hiring_get_candidates() {
     $prefix = $wpdb->prefix . 'massinc_';
 
     $rows = $wpdb->get_results(
-        "SELECT a.id, a.status, a.created_at,
+        "SELECT a.id, a.candidate_id, a.status, a.created_at,
                 j.title AS job_title, j.employment_type AS job_type,
                 c.first_name, c.last_name, c.email, c.phone
          FROM {$prefix}applications a
@@ -414,6 +454,7 @@ function minc_hiring_get_candidates() {
         $summary = $summaries[(int) $row->id] ?? null;
         $candidates[] = [
             'id'        => (int) $row->id,
+            'candidate_id' => (int) $row->candidate_id,
             'name'      => trim($row->first_name . ' ' . $row->last_name),
             'position'  => $row->job_title,
             'type'      => minc_hiring_job_type($row->job_type . ' ' . $row->job_title),
@@ -434,7 +475,7 @@ function minc_hiring_get_candidates() {
         ];
     }
 
-    return $candidates;
+    return minc_hiring_mark_previous_applicants($candidates);
 }
 
 /**

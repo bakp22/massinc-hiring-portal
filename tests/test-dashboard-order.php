@@ -79,6 +79,6 @@ class Test_Dashboard_Order extends WP_UnitTestCase {
         $sorted = $stamps;
         rsort($sorted);
         $this->assertSame($sorted, $stamps);
-        $this->assertCount(6, $stamps);
+        $this->assertCount(7, $stamps, 'Six sample people, one of them (Maya) under two positions.');
     }
 }

@@ -231,7 +231,7 @@ class Test_Attachments_API extends WP_UnitTestCase {
         $this->assertSame('', Attachments::path_for('resume.pdf'));
     }
 
-    public function test_past_applicant_reapplying_updates_past_files_with_new_files() {
+    public function test_applying_to_a_second_position_keeps_each_applications_files() {
         $second_job_id = Job::create([
             'title'           => 'Second Job',
             'description'     => 'Another open job.',
@@ -262,12 +262,19 @@ class Test_Attachments_API extends WP_UnitTestCase {
             ]
         );
         $this->assertSame(201, $second_response->get_status());
+        $second_app_id = $second_response->get_data()['application_id'];
+        $this->assertNotSame($first_app_id, $second_app_id);
 
-        $updated_past_attachments = Attachment::get_for_application($first_app_id);
-        $this->assertCount(3, $updated_past_attachments);
-        $this->assertSame('new_resume.pdf', $updated_past_attachments[0]->get('original_name'));
-        $this->assertSame('new_cover.docx', $updated_past_attachments[1]->get('original_name'));
-        $this->assertSame('https://example.com/new-portfolio', $updated_past_attachments[2]->get('url'));
-        $this->assertFileDoesNotExist($old_stored_path, 'Superseded past file should be removed from disk.');
+        $first_attachments = Attachment::get_for_application($first_app_id);
+        $this->assertCount(2, $first_attachments, 'The first position keeps only what was sent for it.');
+        $this->assertSame('old_resume.pdf', $first_attachments[0]->get('original_name'));
+        $this->assertSame('https://example.com/old-portfolio', $first_attachments[1]->get('url'));
+        $this->assertFileExists($old_stored_path, 'The first application\'s resume must stay on disk.');
+
+        $second_attachments = Attachment::get_for_application($second_app_id);
+        $this->assertCount(3, $second_attachments);
+        $this->assertSame('new_resume.pdf', $second_attachments[0]->get('original_name'));
+        $this->assertSame('new_cover.docx', $second_attachments[1]->get('original_name'));
+        $this->assertSame('https://example.com/new-portfolio', $second_attachments[2]->get('url'));
     }
 }

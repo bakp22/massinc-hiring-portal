@@ -12,10 +12,6 @@ class Candidate extends Model {
         return (string) $this->get('email', '');
     }
 
-    public function is_past_applicant() {
-        return (bool) $this->get('is_past_applicant', 0);
-    }
-
     /**
      * Retrieve a candidate by email address.
      *
@@ -124,16 +120,15 @@ class Candidate extends Model {
         $now = current_time('mysql');
 
         $insert_data = [
-            'first_name'        => sanitize_text_field($data['first_name'] ?? ''),
-            'last_name'         => sanitize_text_field($data['last_name'] ?? ''),
-            'email'             => sanitize_email($data['email'] ?? ''),
-            'phone'             => sanitize_text_field($data['phone'] ?? ''),
-            'is_past_applicant' => !empty($data['is_past_applicant']) ? 1 : 0,
-            'created_at'        => $data['created_at'] ?? $now,
-            'updated_at'        => $data['updated_at'] ?? $now,
+            'first_name' => sanitize_text_field($data['first_name'] ?? ''),
+            'last_name'  => sanitize_text_field($data['last_name'] ?? ''),
+            'email'      => sanitize_email($data['email'] ?? ''),
+            'phone'      => sanitize_text_field($data['phone'] ?? ''),
+            'created_at' => $data['created_at'] ?? $now,
+            'updated_at' => $data['updated_at'] ?? $now,
         ];
 
-        $format = ['%s', '%s', '%s', '%s', '%d', '%s', '%s'];
+        $format = ['%s', '%s', '%s', '%s', '%s', '%s'];
 
         if (!empty($data['wp_user_id'])) {
             $insert_data['wp_user_id'] = absint($data['wp_user_id']);
@@ -150,8 +145,7 @@ class Candidate extends Model {
     }
 
     /**
-     * Update an existing candidate's information and optional past-applicant flag
-     * in wp_massinc_candidates.
+     * Update an existing candidate's information in wp_massinc_candidates.
      *
      * @param int $id
      * @param array $data
@@ -180,11 +174,6 @@ class Candidate extends Model {
                 $update_data['email'] = $clean_email;
                 $format[] = '%s';
             }
-        }
-
-        if (array_key_exists('is_past_applicant', $data)) {
-            $update_data['is_past_applicant'] = !empty($data['is_past_applicant']) ? 1 : 0;
-            $format[] = '%d';
         }
 
         $result = $wpdb->update(
