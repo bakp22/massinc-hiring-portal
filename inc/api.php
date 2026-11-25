@@ -195,10 +195,9 @@ class API {
         }
 
         // Reuse the candidate record if this applicant has applied before
-        // with either the same email or the same name, flagging them as a
-        // past applicant and refreshing their contact information.
+        // with either the same email or the same name, refreshing their
+        // contact information. Each position still gets its own application.
         $candidate = Candidate::find_existing($email, $first_name, $last_name);
-        $is_past_applicant = $candidate !== null;
 
         if ($candidate) {
             $candidate_id = $candidate->get_id();
@@ -210,19 +209,17 @@ class API {
             }
 
             Candidate::update($candidate_id, [
-                'first_name'        => $first_name,
-                'last_name'         => $last_name,
-                'email'             => $email,
-                'phone'             => $phone,
-                'is_past_applicant' => 1,
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+                'email'      => $email,
+                'phone'      => $phone,
             ]);
         } else {
             $candidate_id = Candidate::create([
-                'first_name'        => $first_name,
-                'last_name'         => $last_name,
-                'email'             => $email,
-                'phone'             => $phone,
-                'is_past_applicant' => 0,
+                'first_name' => $first_name,
+                'last_name'  => $last_name,
+                'email'      => $email,
+                'phone'      => $phone,
             ]);
         }
 
@@ -244,10 +241,6 @@ class API {
             Attachments::purge($application_id);
             Application::delete($application_id);
             return $saved;
-        }
-
-        if ($is_past_applicant) {
-            Attachments::replace_past_for_candidate($candidate_id, $application_id);
         }
 
         return new \WP_REST_Response([
